@@ -13,7 +13,7 @@ public class AwesomeAIRewriterItem extends Item
     {
         super();
         this.setUnlocalizedName("ai_rewriter");
-        this.setTextureName("ai_rewriter");
+        this.setTextureName(ModCustomAI.MODID+":ai_rewriter");
         this.setCreativeTab(CreativeTabs.tabTools);
         this.setMaxStackSize(1);
     }
