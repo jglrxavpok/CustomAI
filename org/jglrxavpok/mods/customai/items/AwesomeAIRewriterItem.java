@@ -17,9 +17,4 @@ public class AwesomeAIRewriterItem extends Item
         this.setCreativeTab(CreativeTabs.tabTools);
         this.setMaxStackSize(1);
     }
-    
-    public void registerIcons(IIconRegister register)
-    {
-        this.itemIcon = register.registerIcon(ModCustomAI.MODID+":ai_rewriter");
-    }
 }
