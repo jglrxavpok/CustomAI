@@ -18,6 +18,8 @@ public class GuiList
     private int slotHeight;
     private int currentScroll;
     private int outBoundsMethod;
+    private boolean inverted;
+    public static int MOUSE_WHEEL = 0;
 
     public GuiList(GuiListSlot[] list, int x, int y, int width, int height, int slotHeight)
     {
@@ -46,7 +48,11 @@ public class GuiList
         int speed = 6;
         if(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT))
             speed = 10;
-        currentScroll += Mouse.getDWheel()/120 * speed;
+        if(this.handleClick(mc, mouseX, mouseY) != null)
+        {
+            MOUSE_WHEEL= Mouse.getDWheel()/120;
+        }
+        currentScroll += MOUSE_WHEEL * speed;
         correctScrollValue();
         for(int i =0;i<list.length;i++)
         {
@@ -130,4 +136,17 @@ public class GuiList
         }
         return button1;
     }
+
+    public static GuiListSlot[] createSlotsFromArray(String[] values, int firstIndex)
+    {
+        GuiListSlot[] slots = new GuiStringListSlot[values.length];
+        for(int i = 0;i<slots.length;i++)
+        {
+            slots[i] = new GuiStringListSlot(firstIndex+i, values[i]);
+        }
+        return slots;
+    }
+
+    public void actionPerformed(GuiListSlot slot, Minecraft mc, int mx, int my)
+    {}
 }

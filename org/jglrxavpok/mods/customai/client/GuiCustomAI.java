@@ -1,6 +1,7 @@
 package org.jglrxavpok.mods.customai.client;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -11,7 +12,10 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.entity.ai.EntityAITasks.EntityAITaskEntry;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
@@ -19,6 +23,7 @@ import net.minecraft.world.World;
 
 import org.jglrxavpok.mods.customai.ModCustomAI;
 import org.jglrxavpok.mods.customai.common.CustomAIHelper;
+import org.jglrxavpok.mods.customai.common.Reflect;
 import org.jglrxavpok.mods.customai.json.JSONObject;
 import org.jglrxavpok.mods.customai.netty.PacketUpdateAI;
 import org.lwjgl.opengl.GL11;
@@ -26,10 +31,16 @@ import org.lwjgl.opengl.GL11;
 public class GuiCustomAI extends GuiScreen
 {
 
+    public static enum ValueType
+    {
+        Integer, Float, Double, String, EntityList, Boolean
+    }
+    
     public static final ResourceLocation backgroundTexture = new ResourceLocation(ModCustomAI.MODID, "textures/gui/ai_rewriter_gui.png");
     public static final ResourceLocation secondPartBackgroundTexture = new ResourceLocation(ModCustomAI.MODID, "textures/gui/ai_rewriter_gui_part2.png");
     public static final ResourceLocation backgroundTexture2 = new ResourceLocation(ModCustomAI.MODID, "textures/gui/ai_rewriter_gui2.png");
     public static final ResourceLocation backgroundTexture3 = new ResourceLocation(ModCustomAI.MODID, "textures/gui/ai_rewriter_gui3.png");
+    public static final ResourceLocation addFieldBackgroundTexture = new ResourceLocation(ModCustomAI.MODID, "textures/gui/ai_rewriter_gui_add.png");
     private EntityPlayer player;
     private World worldObj;
     
@@ -58,6 +69,12 @@ public class GuiCustomAI extends GuiScreen
     private ArrayList<GuiTextField2> secondPartFields = new ArrayList<GuiTextField2>();
     private int currentEntryIndex;
     private boolean isTarget;
+    private ArrayList<GuiButton> windowAddButtons = new ArrayList<GuiButton>();
+    private ArrayList<GuiTextField2> windowAddFields = new ArrayList<GuiTextField2>();
+    private boolean isWindowAddPresent = false;
+    private ArrayList<ActionListener> listeners = new ArrayList<ActionListener>();
+    private GuiComboBox tasksBox;
+    private GuiComboBox currentEntitiesBox;
 
     public GuiCustomAI(EntityPlayer player, World world, Entity entity)
     {
@@ -176,6 +193,7 @@ public class GuiCustomAI extends GuiScreen
         {
             field.addToX(-currentTranslation2);
         }
+        
     }
     
     public void updateScreen()
@@ -206,54 +224,103 @@ public class GuiCustomAI extends GuiScreen
     {
         if (button == 0)
         {
-            if(currentPart.equals("Target tasks"))
+            if(this.isWindowAddPresent)
             {
-                selectedButton = targetList.handleClick(mc, (int) (mouseX),mouseY);
-            }
-            else if(currentPart.equals("Tasks"))
-            {
-                selectedButton = tasksList.handleClick(mc, (int) (mouseX),mouseY);
-                
-            }
-            for (int l = 0; l < this.secondPart.size(); ++l)
-            {
-                GuiButton guibutton = (GuiButton)this.secondPart.get(l);
-
-                if (guibutton.mousePressed(this.mc, (int) (mouseX+currentTranslation), mouseY))
+                for (int l = 0; l < this.windowAddButtons.size(); ++l)
                 {
-                    this.selectedButton = guibutton;
+                    GuiButton guibutton = (GuiButton)this.windowAddButtons.get(l);
+
+                    if (guibutton.mousePressed(this.mc, (int) (mouseX), mouseY))
+                    {
+                        this.selectedButton = guibutton;
+                    }
+                    
+                    if(guibutton instanceof GuiComboBox)
+                    {
+                        GuiButton b = ((GuiComboBox)guibutton).getSelectedButton(mc, mouseX, mouseY);
+                        if(b != null)
+                        {
+                            selectedButton = b;
+                            break;
+                        }
+                    }
                 }
             }
-            for (int l = 0; l < this.buttonList.size(); ++l)
+            else
             {
-                GuiButton guibutton = (GuiButton)this.buttonList.get(l);
-
-                if (guibutton.mousePressed(this.mc, (int) (mouseX-currentTranslation), mouseY))
+                if(currentPart.equals("Target tasks"))
                 {
-                    this.selectedButton = guibutton;
+                    selectedButton = targetList.handleClick(mc, (int) (mouseX),mouseY);
+                }
+                else if(currentPart.equals("Tasks"))
+                {
+                    selectedButton = tasksList.handleClick(mc, (int) (mouseX),mouseY);
+                    
+                }
+                for (int l = 0; l < this.secondPart.size(); ++l)
+                {
+                    GuiButton guibutton = (GuiButton)this.secondPart.get(l);
+    
+                    if (guibutton.mousePressed(this.mc, (int) (mouseX+currentTranslation), mouseY))
+                    {
+                        this.selectedButton = guibutton;
+                    }
+                    
+                    if(guibutton instanceof GuiComboBox)
+                    {
+                        GuiButton b = ((GuiComboBox)guibutton).getSelectedButton(mc, mouseX, mouseY);
+                        if(b != null)
+                        {
+                            selectedButton = b;
+                            break;
+                        }
+                    }
+                }
+                for (int l = 0; l < this.buttonList.size(); ++l)
+                {
+                    GuiButton guibutton = (GuiButton)this.buttonList.get(l);
+    
+                    if (guibutton.mousePressed(this.mc, (int) (mouseX-currentTranslation), mouseY))
+                    {
+                        this.selectedButton = guibutton;
+                    }
+                    
+                    if(guibutton instanceof GuiComboBox)
+                    {
+                        GuiButton b = ((GuiComboBox)guibutton).getSelectedButton(mc, mouseX, mouseY);
+                        if(b != null)
+                        {
+                            selectedButton = b;
+                            break;
+                        }
+                    }
                 }
             }
         }
     }
     
-    protected void mouseMovedOrUp(int p_146286_1_, int p_146286_2_, int p_146286_3_)
+    protected void mouseMovedOrUp(int mx, int my, int button)
     {
-        if (this.selectedButton != null && p_146286_3_ == 0)
+        if (this.selectedButton != null && button == 0)
         {
-            this.selectedButton.mouseReleased((int) (p_146286_1_-currentTranslation), p_146286_2_);
+            this.selectedButton.mouseReleased((int) (mx-currentTranslation), my);
             selectedButton.func_146113_a(this.mc.getSoundHandler());
-            actionPerformed(selectedButton);
+            actionPerformed(mx,my,button,selectedButton);
             this.selectedButton = null;
         }
         
         for(GuiTextField field : secondPartFields)
         {
-            field.mouseClicked((int) (p_146286_1_+currentTranslation), p_146286_2_, p_146286_3_);
+            field.mouseClicked((int) (mx+currentTranslation), my, button);
         }
     }
     
-    public void actionPerformed(GuiButton button)
+    public void actionPerformed(int mx, int my, int buttonID, GuiButton button)
     {
+        for(ActionListener a : listeners )
+        {
+            a.actionPerformed(mx,my,button);
+        }
         if(button.id == 0)
         {
             if(currentEntry != null)
@@ -280,6 +347,10 @@ public class GuiCustomAI extends GuiScreen
             ModCustomAI.packetPipeline.sendToServer(new PacketUpdateAI(entity.getEntityId(), tasks, targetTasks));
             FMLNetworkHandler.openGui(player, ModCustomAI.instance, -1, worldObj, 0, 0, 0);
         }
+        else if(button instanceof GuiListSlot)
+        {
+            ((GuiListSlot)button).parent.actionPerformed(((GuiListSlot)button), mc,mx,my);
+        }
         else if(button.id == 1)
         {
             FMLNetworkHandler.openGui(player, ModCustomAI.instance, -1, worldObj, 0, 0, 0);
@@ -291,6 +362,37 @@ public class GuiCustomAI extends GuiScreen
         else if(button.id == -202 && button instanceof GuiCheckBox)
         {
             ((GuiCheckBox)button).handleClicked();
+        }
+        else if(button.id == -400)
+        {
+            // TODO
+            this.isWindowAddPresent = false;
+            if(tasksBox != null && this.tasksBox.getValue() != null)
+            {
+                if(currentPart.equals("Tasks"))
+                {
+                    EntityAITaskEntry entry = CustomAIHelper.createDummyAITask((EntityLiving) this.entity,this.tasksBox.getValue());
+                    System.out.println(CustomAIHelper.generateJSONFromAI((EntityLiving) this.entity, entry));
+                    tasks.add(entry);
+                }
+                else
+                {
+                    targetTasks.add(CustomAIHelper.createDummyAITask((EntityLiving) this.entity,this.tasksBox.getValue()));
+                }
+                currentEntry = null;
+                entryData = null;
+                initGui();
+                this.buildSecondPart(null);
+                this.displayPart(isTarget ? "Target tasks" : "Tasks");
+            }
+        }
+        else if(button.id == -401)
+        {
+            this.isWindowAddPresent = false;
+        }
+        else if(button instanceof GuiComboBox)
+        {
+            ((GuiComboBox)button).handleClick(mx,my,buttonID);
         }
         if(this.currentPart.equals("Main"))
         {
@@ -336,7 +438,8 @@ public class GuiCustomAI extends GuiScreen
             }
             else if(button.id == -20)
             {
-                // Add a new task
+                createWindow();
+                this.isWindowAddPresent = true;
             }
             else if(button.id == -201)
             {
@@ -390,7 +493,8 @@ public class GuiCustomAI extends GuiScreen
             }
             else if(button.id == -20)
             {
-                
+                createWindow();
+                this.isWindowAddPresent = true;
             }
             else if(button.id == -201)
             {
@@ -413,6 +517,50 @@ public class GuiCustomAI extends GuiScreen
         }
     }
     
+    private void createWindow()
+    {
+        windowAddButtons.clear();
+        windowAddFields.clear();
+        ScaledResolution res = new ScaledResolution(mc.gameSettings, mc.displayWidth,mc.displayHeight);
+        int width1 = res.getScaledWidth();
+        int height1 = res.getScaledHeight();
+
+        GuiButton confirm = new GuiButton(-400, width1/2-80,height1/2+35,75,20,"Confirm");
+        GuiButton cancel = new GuiButton(-401, width1/2+5,height1/2+35,75,20,"Cancel");
+        this.windowAddButtons.add(confirm);
+        this.windowAddButtons.add(cancel);
+        String[] values = generateAIList(!currentPart.equals("Tasks"));
+        Arrays.sort(values);
+        tasksBox = new GuiComboBox(-500,width1/2-150/2,height1/2-20,150,20,values[0],values);
+        listeners.add(tasksBox);
+        windowAddButtons.add(tasksBox);
+    }
+
+    private String[] generateAIList(boolean target)
+    {
+        Iterator<Class<? extends EntityAIBase>> it = CustomAIHelper.isTarget.keySet().iterator();
+        ArrayList<String> list = new ArrayList<String>();
+        while(it.hasNext())
+        {
+            Class<? extends EntityAIBase> c = it.next();
+            Boolean bool = CustomAIHelper.isTarget.get(c);
+            if(bool == null)
+                ;
+            else if(bool)
+            {
+                if(target && CustomAIHelper.isSuitableForEntity((EntityLiving) entity, c))
+                    list.add(CustomAIHelper.getNameFromClass(c));
+            }
+            else
+            {
+                if(!target && CustomAIHelper.isSuitableForEntity((EntityLiving) entity, c))
+                    list.add(CustomAIHelper.getNameFromClass(c));
+            }
+        }
+        
+        return list.toArray(new String[0]);
+    }
+
     @SuppressWarnings("unchecked")
     private void buildSecondPart(EntityAITaskEntry entry)
     {
@@ -442,34 +590,59 @@ public class GuiCustomAI extends GuiScreen
                 GuiLabel label = new GuiLabel(width1/2-75,height1/2-60+y,key+":");
                 secondPart.add(label);
                 GuiLabel valueLabel = new GuiLabel(width1/2+50,height1/2-60+y,""+value);
-                if(value instanceof String)
+                ValueType type = getType(key, value);
+                if(type == null)
+                    continue;
+                switch(type)
                 {
-                    y+=2;
-                    GuiTextField2 f = new GuiTextField2(mc.fontRenderer,width1/2+30,height1/2-60+y-10,50,20);
-                    f.setMaxStringLength(Integer.MAX_VALUE);
-                    f.setText((String)value);
-                    f.setValueName(key);
-                    secondPartFields.add(f);
-                    y+=2;
-                }
-                else if(value instanceof Integer)
-                {
-                    addSpinnerButtons(entryData,key,valueLabel,width1/2+70,height1/2-70+y,0,1000,Integer.class, 1);
-                    secondPart.add(valueLabel);
-                }
-                else if(value instanceof Float)
-                {
-                    addSpinnerButtons(entryData,key,valueLabel,width1/2+70,height1/2-70+y,0,1000,Float.class, 0.1f);
-                    secondPart.add(valueLabel);
-                }
-                else if(value instanceof Double)
-                {
-                    addSpinnerButtons(entryData,key,valueLabel,width1/2+70,height1/2-70+y,0,1000,Double.class, 0.1);
-                    secondPart.add(valueLabel);
-                }
-                else if(value instanceof Boolean)
-                {
-                    addCheckBox(entryData,key,width1/2+60,height1/2-70+y);
+                    case String:
+                    {
+                        y+=2;
+                        GuiTextField2 f = new GuiTextField2(mc.fontRenderer,width1/2+30,height1/2-60+y-10,50,20);
+                        f.setMaxStringLength(Integer.MAX_VALUE);
+                        f.setText((String)value);
+                        f.setValueName(key);
+                        secondPartFields.add(f);
+                        y+=2;
+                        break;
+                    }
+                    case Integer:
+                    {
+                        addSpinnerButtons(entryData,key,valueLabel,width1/2+70,height1/2-70+y,0,1000,Integer.class, 1);
+                        secondPart.add(valueLabel);
+                        break;
+                    }
+                    case Float:
+                    {
+                        addSpinnerButtons(entryData,key,valueLabel,width1/2+70,height1/2-70+y,0,1000,Float.class, 0.1f);
+                        secondPart.add(valueLabel);
+                        break;
+                    }
+                    case Double:
+                    {
+                        addSpinnerButtons(entryData,key,valueLabel,width1/2+70,height1/2-70+y,0,1000,Double.class, 0.1);
+                        secondPart.add(valueLabel);
+                        break;
+                    }
+                    case Boolean:
+                    {
+                        addCheckBox(entryData,key,width1/2+60,height1/2-70+y);
+                        break;
+                    }
+                    case EntityList:
+                    {
+                        String[] values = getEntitiesList();
+                        GuiComboBox box = new GuiComboBox(-502,width1/2+30,height1/2-60+y-10,50,20,values[0],values);
+                        box.setValue((String)value);
+                        box.attachJson(entryData, key);
+                        secondPart.add(box);
+                        break;
+                    }
+                    
+                    default:
+                    {
+                        continue;
+                    }
                 }
                 y+=20;
             }
@@ -481,6 +654,53 @@ public class GuiCustomAI extends GuiScreen
         {
             e.printStackTrace();
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private String[] getEntitiesList()
+    {
+        Iterator<String> names = EntityList.stringToClassMapping.keySet().iterator();
+        ArrayList<String> result = new ArrayList<String>();
+        while(names.hasNext())
+        {
+            String n = names.next();
+            if(Reflect.isInstanceof((Class<?>)EntityList.stringToClassMapping.get(n), EntityLivingBase.class))
+            {
+                result.add(n);
+            }
+        }
+        String[] array = result.toArray(new String[0]);
+        Arrays.sort(array);
+        return array;
+    }
+
+    private ValueType getType(String key, Object value)
+    {
+        if(key.equals("Entity class name"))
+        {
+            return ValueType.EntityList;
+        }
+        else if(value instanceof Float)
+        {
+            return ValueType.Float;
+        }
+        else if(value instanceof Double)
+        {
+            return ValueType.Double;
+        }
+        else if(value instanceof String)
+        {
+            return ValueType.String;
+        }
+        else if(value instanceof Boolean)
+        {
+            return ValueType.Boolean;
+        }
+        else if(value instanceof Integer)
+        {
+            return ValueType.Integer;
+        }
+        return null;
     }
 
     private void addCheckBox(JSONObject entryData2, String key, int x, int y)
@@ -537,6 +757,49 @@ public class GuiCustomAI extends GuiScreen
         this.drawGuiContainerForegroundLayer(par1, par2);
         
         translate(-currentTranslation);
+        GL11.glDisable(GL11.GL_LIGHTING);
+        if(this.isWindowAddPresent)
+        {
+            ScaledResolution res = new ScaledResolution(mc.gameSettings, mc.displayWidth,mc.displayHeight);
+            int width1 = res.getScaledWidth();
+            int height1 = res.getScaledHeight();
+            this.drawGradientRect(0, 0, this.width, this.height, 0xB0070707, 0xB0070707);
+
+            GL11.glPushMatrix();
+
+            GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+            this.mc.renderEngine.bindTexture(addFieldBackgroundTexture);
+            int w = 207;
+            int h = 140;
+            int k = (int) (width/2-w/2);
+            int l = height/2-h/2-5;
+            this.drawTexturedModalRect(k, l, 0, 0, w, h);
+            GL11.glPopMatrix();
+            
+            for(GuiButton button : windowAddButtons)
+            {
+                button.drawButton(mc, par1, par2);
+            }
+            
+            String s = "Add a new task";
+            int x = width1/2-mc.fontRenderer.getStringWidth(s)/2;
+            int y = height1/2-h/2;
+            mc.fontRenderer.drawStringWithShadow(s, x, y, 0xFFFFFF);
+            
+            s = "New task: ";
+            x = width1/2-w/2+10;
+            y = height1/2-h/2+25;
+            mc.fontRenderer.drawStringWithShadow(s, x, y, 0xFFFFFF);
+
+            for(int i = 0;i<windowAddButtons.size();i++)
+            {
+                GuiButton button = windowAddButtons.get(i);
+                if(button instanceof IPostRenderable)
+                {
+                    ((IPostRenderable)button).postRender(mc,par1,par2);
+                }
+            }
+        }
         GL11.glEnable(GL11.GL_LIGHTING);
 
     }
@@ -603,6 +866,15 @@ public class GuiCustomAI extends GuiScreen
         fontRendererObj.drawStringWithShadow(s1, (int) (x-fontRendererObj.getStringWidth(s1)/2+currentTranslation), y, 0xFFFFFF);
         String s = "Editing AI of "+entity.getCommandSenderName()+"(ID:"+this.entity.getEntityId()+")";
         fontRendererObj.drawStringWithShadow(s, (int) (x-fontRendererObj.getStringWidth(s)/2+1+currentTranslation), y+15, 0xFFFFFF);
+        
+        for(int i = 0;i<secondPart.size();i++)
+        {
+            GuiButton button = secondPart.get(i);
+            if(button instanceof IPostRenderable)
+            {
+                ((IPostRenderable)button).postRender(mc,par1,par2);
+            }
+        }
         GL11.glEnable(GL11.GL_LIGHTING);
     }
     

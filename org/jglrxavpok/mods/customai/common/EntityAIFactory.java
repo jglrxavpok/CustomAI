@@ -1,7 +1,6 @@
 package org.jglrxavpok.mods.customai.common;
 
 import cpw.mods.fml.common.ObfuscationReflectionHelper;
-import cpw.mods.fml.common.registry.EntityRegistry;
 import net.minecraft.command.IEntitySelector;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityCreature;
@@ -69,6 +68,8 @@ import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.passive.EntityWolf;
 import net.minecraft.item.Item;
 
+import org.jglrxavpok.mods.customai.ai.EntityAIFleeSunEvenNotBurning;
+import org.jglrxavpok.mods.customai.ai.EntityAIFollowEntity;
 import org.jglrxavpok.mods.customai.json.JSONObject;
 
 public final class EntityAIFactory
@@ -220,6 +221,19 @@ public final class EntityAIFactory
         {
             object.put("Open", (Boolean)ObfuscationReflectionHelper.getPrivateValue(EntityAIOpenDoor.class, (EntityAIOpenDoor)entry.action, 0));
         }
+        // =============================
+        // Start of custom AI
+        // =============================
+        else if(clazz == EntityAIFleeSunEvenNotBurning.class)
+        {
+            object.put("Move speed", (Double)ObfuscationReflectionHelper.getPrivateValue(EntityAIFleeSunEvenNotBurning.class, (EntityAIFleeSunEvenNotBurning)entry.action, 4));
+        }
+        else if(clazz == EntityAIFollowEntity.class)
+        {
+            object.put("Entity class name", getEntityName(((Class<? extends Entity>)ObfuscationReflectionHelper.getPrivateValue(EntityAIFollowEntity.class, (EntityAIFollowEntity)entry.action, 0))));
+            object.put("Move speed", (Double)ObfuscationReflectionHelper.getPrivateValue(EntityAIFollowEntity.class, (EntityAIFollowEntity)entry.action, 3));
+            object.put("Max distance", (Float)ObfuscationReflectionHelper.getPrivateValue(EntityAIFollowEntity.class, (EntityAIFollowEntity)entry.action, 4));
+        }
         return object;
     }
 
@@ -269,10 +283,14 @@ public final class EntityAIFactory
         return s;
     }
 
-    @SuppressWarnings("unchecked")
     public EntityAITaskEntry generateAIBase(EntityLiving entity, String jsonData)
     {
-        JSONObject json = new JSONObject(jsonData);
+        return generateAIBase(entity, new JSONObject(jsonData));
+    }
+    
+    @SuppressWarnings("unchecked")
+    public EntityAITaskEntry generateAIBase(EntityLiving entity, JSONObject json)
+    {
         String clazz = json.getString("type");
         try
         {
@@ -280,7 +298,6 @@ public final class EntityAIFactory
             if(CustomAIHelper.isSuitableForEntity(entity, c))
             {
                 EntityAITaskEntry entry = entity.tasks.new EntityAITaskEntry(json.getInt("priority"), null);
-//                System.out.println(json.toString());
                 if(c == EntityAISwimming.class)
                 {
                     entry.action = new EntityAISwimming(entity);
@@ -291,7 +308,15 @@ public final class EntityAIFactory
                 }
                 else if(c == EntityAIAvoidEntity.class)
                 {
-                    entry.action = new EntityAIAvoidEntity((EntityCreature)entity, getEntityClass(json.getString("Entity class name")), (float)json.getDouble("Distance from entity"),json.getDouble("Near speed"),json.getDouble("Far speed"));
+                    Class<? extends Entity> clazz1 = null;
+                    Class<? extends Entity> entClass = getEntityClass(json.getString("Entity class name"));
+                    if(entClass != null)
+                        clazz1 = entClass;
+                    else if(checkIfClassExists(clazz))
+                        clazz1 = (Class<? extends Entity>) Class.forName(clazz);
+                    else
+                        clazz1 = EntityLiving.class;
+                    entry.action = new EntityAIAvoidEntity((EntityCreature)entity, clazz1, (float)json.getDouble("Distance from entity"),json.getDouble("Near speed"),json.getDouble("Far speed"));
                 }
                 else if(c == EntityAIAttackOnCollide.class)
                 {
@@ -310,7 +335,15 @@ public final class EntityAIFactory
                 }
                 else if(c == EntityAIWatchClosest.class)
                 {
-                    entry.action = new EntityAIWatchClosest(entity, getEntityClass(json.getString("Entity class name")), (float) json.getDouble("Max distance"), (float)json.getDouble("Look probability"));
+                    Class<? extends Entity> clazz1 = null;
+                    Class<? extends Entity> entClass = getEntityClass(json.getString("Entity class name"));
+                    if(entClass != null)
+                        clazz1 = entClass;
+                    else if(checkIfClassExists(clazz))
+                        clazz1 = (Class<? extends Entity>) Class.forName(clazz);
+                    else
+                        clazz1 = EntityLiving.class;
+                    entry.action = new EntityAIWatchClosest(entity, clazz1, (float) json.getDouble("Max distance"), (float)json.getDouble("Look probability"));
                 }
                 else if(c == EntityAILookIdle.class)
                 {
@@ -344,9 +377,12 @@ public final class EntityAIFactory
                     {
                         selector = null;
                     }
-                    Class<?> clazz1 = null;
-                    if(this.checkIfClassExists(getEntityClass(json.getString("Entity class name")).getCanonicalName()))
-                        clazz1 = getEntityClass(json.getString("Entity class name"));
+                    Class<? extends Entity> clazz1 = null;
+                    Class<? extends Entity> entClass = getEntityClass(json.getString("Entity class name"));
+                    if(entClass != null)
+                        clazz1 = entClass;
+                    else if(checkIfClassExists(clazz))
+                        clazz1 = (Class<? extends Entity>) Class.forName(clazz);
                     else
                         clazz1 = EntityLiving.class;
                     entry.action = new EntityAINearestAttackableTarget((EntityCreature)entity, clazz1, json.getInt("Target chance"), json.getBoolean("On sight"), json.getBoolean("Nearby only"), selector);
@@ -465,7 +501,15 @@ public final class EntityAIFactory
                 }
                 else if(c == EntityAITargetNonTamed.class)
                 {
-                    entry.action = new EntityAITargetNonTamed((EntityTameable)entity, getEntityClass(json.getString("Entity class name")), json.getInt("Target chance"), json.getBoolean("On sight"));
+                    Class<? extends Entity> clazz1 = null;
+                    Class<? extends Entity> entClass = getEntityClass(json.getString("Entity class name"));
+                    if(entClass != null)
+                        clazz1 = entClass;
+                    else if(checkIfClassExists(clazz))
+                        clazz1 = (Class<? extends Entity>) Class.forName(clazz);
+                    else
+                        clazz1 = EntityLiving.class;
+                    entry.action = new EntityAITargetNonTamed((EntityTameable)entity, clazz1, json.getInt("Target chance"), json.getBoolean("On sight"));
                 }
                 else if(c == EntityAITradePlayer.class)
                 {
@@ -477,7 +521,15 @@ public final class EntityAIFactory
                 }
                 else if(c == EntityAIWatchClosest2.class)
                 {
-                    entry.action = new EntityAIWatchClosest2(entity, getEntityClass(json.getString("Entity class name")), (float) json.getDouble("Max distance"), (float)json.getDouble("Look probability"));
+                    Class<? extends Entity> clazz1 = null;
+                    Class<? extends Entity> entClass = getEntityClass(json.getString("Entity class name"));
+                    if(entClass != null)
+                        clazz1 = entClass;
+                    else if(checkIfClassExists(clazz))
+                        clazz1 = (Class<? extends Entity>) Class.forName(clazz);
+                    else
+                        clazz1 = EntityLiving.class;
+                    entry.action = new EntityAIWatchClosest2(entity, clazz1, (float) json.getDouble("Max distance"), (float)json.getDouble("Look probability"));
                 }
                 else if(c == EntityAIOpenDoor.class)
                 {
@@ -490,6 +542,26 @@ public final class EntityAIFactory
                 else if(c == EntityAIOwnerHurtTarget.class)
                 {
                     entry.action = new EntityAIOwnerHurtTarget((EntityTameable)entity);
+                }
+                
+                // =============================
+                // Start of custom AI
+                // =============================
+                else if(c == EntityAIFleeSunEvenNotBurning.class)
+                {
+                    entry.action = new EntityAIFleeSunEvenNotBurning((EntityCreature)entity, json.getDouble("Move speed"));
+                }
+                else if(c == EntityAIFollowEntity.class)
+                {
+                    Class<? extends Entity> clazz1 = null;
+                    Class<? extends Entity> entClass = getEntityClass(json.getString("Entity class name"));
+                    if(entClass != null)
+                        clazz1 = entClass;
+                    else if(checkIfClassExists(clazz))
+                        clazz1 = (Class<? extends Entity>) Class.forName(clazz);
+                    else
+                        clazz1 = EntityLiving.class;
+                    entry.action = new EntityAIFollowEntity(entity, clazz1, json.getDouble("Move speed"), (float)json.getDouble("Max distance"));
                 }
                 
                 if(entry.action == null)

@@ -1,10 +1,9 @@
 package org.jglrxavpok.mods.customai.items;
 
-import org.jglrxavpok.mods.customai.ModCustomAI;
-
-import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
+
+import org.jglrxavpok.mods.customai.ModCustomAI;
 
 public class AwesomeAIRewriterItem extends Item
 {

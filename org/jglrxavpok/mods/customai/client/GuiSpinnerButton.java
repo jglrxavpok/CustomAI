@@ -15,7 +15,7 @@ public class GuiSpinnerButton extends GuiButton
 {
 
 
-    private static final ResourceLocation spinnerTextures = new ResourceLocation(ModCustomAI.MODID, "textures/gui/spinners.png");
+    static final ResourceLocation spinnerTextures = new ResourceLocation(ModCustomAI.MODID, "textures/gui/spinners.png");
     private GuiButton toModify;
     private double value;
     private String valueName;
