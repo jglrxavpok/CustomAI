@@ -15,13 +15,11 @@ public class EntityAIFleeSunEvenNotBurning extends EntityAIBase
     private double shelterY;
     private double shelterZ;
     private double movementSpeed;
-    private World theWorld;
 
     public EntityAIFleeSunEvenNotBurning(EntityCreature par1EntityCreature, double par2)
     {
         this.theCreature = par1EntityCreature;
         this.movementSpeed = par2;
-        this.theWorld = par1EntityCreature.worldObj;
         this.setMutexBits(1);
     }
 
@@ -30,11 +28,11 @@ public class EntityAIFleeSunEvenNotBurning extends EntityAIBase
      */
     public boolean shouldExecute()
     {
-        if (!this.theWorld.isDaytime())
+        if (!this.theCreature.worldObj.isDaytime())
         {
             return false;
         }
-        else if (!this.theWorld.canBlockSeeTheSky(MathHelper.floor_double(this.theCreature.posX), (int)this.theCreature.boundingBox.minY, MathHelper.floor_double(this.theCreature.posZ)))
+        else if (!this.theCreature.worldObj.canBlockSeeTheSky(MathHelper.floor_double(this.theCreature.posX), (int)this.theCreature.boundingBox.minY, MathHelper.floor_double(this.theCreature.posZ)))
         {
             return false;
         }
@@ -82,9 +80,9 @@ public class EntityAIFleeSunEvenNotBurning extends EntityAIBase
             int k = MathHelper.floor_double(this.theCreature.boundingBox.minY + (double)random.nextInt(6) - 3.0D);
             int l = MathHelper.floor_double(this.theCreature.posZ + (double)random.nextInt(20) - 10.0D);
 
-            if (!this.theWorld.canBlockSeeTheSky(j, k, l) && this.theCreature.getBlockPathWeight(j, k, l) < 0.0F)
+            if (!this.theCreature.worldObj.canBlockSeeTheSky(j, k, l) && this.theCreature.getBlockPathWeight(j, k, l) < 0.0F)
             {
-                return this.theWorld.getWorldVec3Pool().getVecFromPool((double)j, (double)k, (double)l);
+                return this.theCreature.worldObj.getWorldVec3Pool().getVecFromPool((double)j, (double)k, (double)l);
             }
         }
 

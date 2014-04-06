@@ -6,6 +6,7 @@ import net.minecraft.util.ChatComponentText;
 import net.minecraft.world.World;
 
 import org.jglrxavpok.mods.customai.ModCustomAI;
+import org.jglrxavpok.mods.customai.client.GuiAIEmitter;
 import org.jglrxavpok.mods.customai.client.GuiCustomAI;
 
 public class CustomAIGuiHandler implements IGuiHandler
@@ -31,6 +32,10 @@ public class CustomAIGuiHandler implements IGuiHandler
                     player.addChatMessage(new ChatComponentText("§4This mob doesn't support AI tasks. Sorry :("));
             }
         }
+        else if(ID == 1)
+        {
+            
+        }
         return null;
     }
 
@@ -52,6 +57,10 @@ public class CustomAIGuiHandler implements IGuiHandler
                     return new GuiCustomAI(player, world, world.getEntityByID(props.getEntityClickedID()));
                 }
             }
+        }
+        else if(ID == 1)
+        {
+            return new GuiAIEmitter(player, world, (TileEntityAIEmitter)world.getTileEntity(x, y, z),x, y, z);
         }
         return null;
     }

@@ -157,9 +157,11 @@ public class JSONTokener {
                 throw new JSONException(exception);
             }
 
-            if (c <= 0) { // End of stream
+            if (c == -1)
+            {
+                // End of stream
                 this.eof = true;
-                c = 0;
+                c = -1;
             }
         }
         this.index += 1;
@@ -253,7 +255,8 @@ public class JSONTokener {
         StringBuffer sb = new StringBuffer();
         for (;;) {
             c = this.next();
-            switch (c) {
+            switch (c) 
+            {
             case 0:
             case '\n':
             case '\r':
@@ -290,7 +293,8 @@ public class JSONTokener {
                 }
                 break;
             default:
-                if (c == quote) {
+                if (c == quote)
+                {
                     return sb.toString();
                 }
                 sb.append(c);
@@ -432,7 +436,6 @@ public class JSONTokener {
     public JSONException syntaxError(String message) {
         return new JSONException(message + this.toString());
     }
-
 
     /**
      * Make a printable string of this JSONTokener.

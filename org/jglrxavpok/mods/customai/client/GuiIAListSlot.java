@@ -16,8 +16,8 @@ public class GuiIAListSlot extends GuiListSlot
     public GuiIAListSlot(int par1, EntityAITaskEntry taskEntry)
     {
         super(par1);
-        if(taskEntry == null)
-            ;
+        if(taskEntry == null || taskEntry.action == null)
+            this.displayString = "[ERROR] AI Task empty";
         else
             this.displayString = CustomAIHelper.getNameForTask(taskEntry.action);
         this.task = taskEntry;

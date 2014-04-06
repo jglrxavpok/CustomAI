@@ -86,7 +86,7 @@ public class GuiAIChoiceButton extends GuiButton
         for(int i = 0;i<numberVectors.size();i++)
         {
             Vector4f vector = numberVectors.get(i);
-            vector.y+=numberSpeeds.get(i);
+            vector.y+=numberSpeeds.get(i)+(60f/((float)Minecraft.getMinecraft().gameSettings.limitFramerate));
         }
         
         for(int i= 0 ;i<numberVectors.size();i++)

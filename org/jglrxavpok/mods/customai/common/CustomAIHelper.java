@@ -1,5 +1,6 @@
 package org.jglrxavpok.mods.customai.common;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -56,6 +57,7 @@ import net.minecraft.entity.passive.EntityTameable;
 import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.passive.EntityWolf;
 
+import org.jglrxavpok.mods.customai.ai.EntityAIFleeSunEvenNotBurning;
 import org.jglrxavpok.mods.customai.json.JSONObject;
 
 public final class CustomAIHelper
@@ -63,12 +65,29 @@ public final class CustomAIHelper
 
     public static HashMap<Class<? extends EntityAIBase>, String> map = new HashMap<Class<? extends EntityAIBase>, String>();
     public static HashMap<Class<? extends EntityAIBase>, Boolean> isTarget = new HashMap<Class<? extends EntityAIBase>, Boolean>();
+    public static HashMap<Class<? extends EntityAIBase>, Integer> ownerFields = new HashMap<Class<? extends EntityAIBase>, Integer>();
+    public static HashMap<Class<? extends EntityAIBase>, Class<? extends EntityAIBase>> ownerFieldClasses = new HashMap<Class<? extends EntityAIBase>, Class<? extends EntityAIBase>>();
     private static EntitySheep testSheep;
     
-    public static void registerAI(Class<? extends EntityAIBase> ai, String name, boolean isTarget)
+    public static final int TARGET_MUTEX_BITS = 1;
+    public static final int MOVE_MUTEX_BITS = 1;
+    public static final int WATCH_MUTEX_BITS = 2;
+    public static final int ENTITY_INTERACT_MUTEX_BITS = 3;
+    public static final int SWIMMING_MUTEX_BITS = 4;
+    public static final int SIT_MUTEX_BITS = 5;
+    public static final int SPECIAL_MUTEX_BITS = 7;
+    
+    public static void registerAI(Class<? extends EntityAIBase> ai, String name, boolean isTarget, int ownerFieldPos)
     {
         map.put(ai,name);
         CustomAIHelper.isTarget.put(ai,isTarget);
+        ownerFields.put(ai, ownerFieldPos);
+    }
+    
+    public static void registerAI(Class<? extends EntityAIBase> ai, String name, boolean isTarget, int ownerFieldPos, Class<? extends EntityAIBase> ownerFieldClass)
+    {
+        registerAI(ai, name, isTarget, ownerFieldPos);
+        ownerFieldClasses.put(ai, ownerFieldClass);
     }
     
     public static boolean hasEntityAI(Entity entity)
@@ -141,6 +160,20 @@ public final class CustomAIHelper
         return null;
     }
 
+    public static String getNameForTask(Class<? extends EntityAIBase> action)
+    {
+        if(map.containsKey(action))
+        {
+            return map.get(action);
+        }
+        String s = action.getCanonicalName();
+        if(s.contains("."))
+        {
+            return s.substring(s.lastIndexOf('.')+1);
+        }
+        return s;
+    }
+    
     public static String getNameForTask(EntityAIBase action)
     {
         if(map.containsKey(action.getClass()))
@@ -173,15 +206,43 @@ public final class CustomAIHelper
             
             for(EntityAITaskEntry entry : tasks)
             {
-                if(entry.action instanceof EntityAIDoorInteract)
+                if(entry != null && entry.action != null)
                 {
-                    ((EntityLiving)entity).getNavigator().setEnterDoors(true);
-                    ((EntityLiving)entity).getNavigator().setBreakDoors(true);
+                    setOwner(entry.action, entity);
+                    if(entry.action instanceof EntityAIDoorInteract)
+                    {
+                        ((EntityLiving)entity).getNavigator().setEnterDoors(true);
+                        ((EntityLiving)entity).getNavigator().setBreakDoors(true);
+                    }
                 }
             }
         }
     }
     
+    private static void setOwner(EntityAIBase action, Entity entity)
+    {
+        Class<? extends EntityAIBase> clazz = (Class<? extends EntityAIBase>) action.getClass();
+        Integer i = ownerFields.get(clazz);
+        Class<? extends EntityAIBase> c = ownerFieldClasses.get(clazz);
+        if(i != null && i >= 0)
+        {
+            try
+            {
+                Field f = (c == null ? clazz : c).getDeclaredFields()[i];
+                f.setAccessible(true);
+                f.set(action, entity);
+            }
+            catch (IllegalArgumentException e)
+            {
+                e.printStackTrace();
+            }
+            catch (IllegalAccessException e)
+            {
+                e.printStackTrace();
+            }
+        }
+    }
+
     private static void clearExecutingTargetTasks(Entity entity)
     {
         if(hasEntityAI(entity))
@@ -204,7 +265,7 @@ public final class CustomAIHelper
 
     public static EntityAITaskEntry generateAIFromJSON(Entity entity, String jsonData)
     {
-        if(!hasEntityAI(entity))
+        if(!hasEntityAI(entity) && entity  != null)
             return null;
         return EntityAIFactory.instance().generateAIBase((EntityLiving)entity,jsonData);
     }
@@ -273,6 +334,8 @@ public final class CustomAIHelper
             return false;
         else if(c == EntityAIOwnerHurtByTarget.class && !(entity instanceof EntityTameable))
             return false;
+        else if(c == EntityAIFleeSunEvenNotBurning.class && ! (entity instanceof EntityCreature))
+            return false;
         return true;
     }
 
@@ -299,6 +362,11 @@ public final class CustomAIHelper
     {
         JSONObject json = new JsonDummyObject(getClassFromName(value),1);
         return generateAIFromJSON(e, json);
+    }
+    
+    public static JSONObject createDummyJSON(Class<? extends EntityAIBase> ai)
+    {
+        return EntityAIFactory.instance().createDummyJSON(ai);
     }
 
     public static EntityAITaskEntry generateAIFromJSON(EntityLiving entity, JSONObject json)

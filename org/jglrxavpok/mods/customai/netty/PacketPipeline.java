@@ -1,18 +1,16 @@
 package org.jglrxavpok.mods.customai.netty;
 
-import java.util.*;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageCodec;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.network.INetHandler;
-import net.minecraft.network.NetHandlerPlayServer;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.LinkedList;
+import java.util.List;
 
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.network.FMLEmbeddedChannel;
@@ -21,6 +19,11 @@ import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.network.internal.FMLProxyPacket;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import net.minecraft.client.Minecraft;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.network.INetHandler;
+import net.minecraft.network.NetHandlerPlayServer;
 
 /**
  * Packet pipeline class. Directs all registered packet data to be handled by the packets themselves.
@@ -34,6 +37,37 @@ public class PacketPipeline extends MessageToMessageCodec<FMLProxyPacket, Abstra
     private LinkedList<Class<? extends AbstractPacket>> packets           = new LinkedList<Class<? extends AbstractPacket>>();
     private boolean                                     isPostInitialised = false;
 
+    @SuppressWarnings("unchecked")
+    public PacketPipeline(String packetsPackage, Class<?> clazz)
+    {
+//        try
+//        {
+//            ImmutableSet<ClassInfo> set = ClassPath.from(ClassLoader.getSystemClassLoader()).getTopLevelClassesRecursive(packetsPackage);
+//            Iterator<ClassInfo> it = set.iterator();
+//            while(it.hasNext())
+//            {
+//                ClassInfo info = it.next();
+//                Class<?> c = Class.forName(info.getName());
+//                if(Reflect.isInstanceof(c, clazz))
+//                {
+//                    registerPacket((Class<? extends AbstractPacket>) c);
+//                }
+//            }
+//        }
+//        catch (IOException e)
+//        {
+//            e.printStackTrace();
+//        }
+//        catch (ClassNotFoundException e)
+//        {
+//            e.printStackTrace();
+//        }
+        this.registerPacket(PacketAIEStackUpdate.class);
+        this.registerPacket(PacketGetAI.class);
+        this.registerPacket(PacketUpdateAI.class);
+        this.registerPacket(PacketUpdateAIEmitter.class);
+    }
+    
     /**
      * Register your packet with the pipeline. Discriminators are automatically set.
      *
@@ -113,8 +147,6 @@ public class PacketPipeline extends MessageToMessageCodec<FMLProxyPacket, Abstra
     public void initialise() 
     {
         this.channels = NetworkRegistry.INSTANCE.newChannel("CustomAINettyChannel", this);
-        this.registerPacket(PacketUpdateAI.class);
-        this.registerPacket(PacketGetAI.class);
     }
 
     /** Method to call from FMLPostInitializationEvent

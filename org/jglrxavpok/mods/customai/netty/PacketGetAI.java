@@ -88,10 +88,6 @@ public class PacketGetAI extends AbstractPacket
                 ModCustomAI.packetPipeline.sendTo(new PacketUpdateAI(entityID, CustomAIHelper.getTasksList(e), CustomAIHelper.getTargetTasksList(e)), (EntityPlayerMP) player);
             }
         }
-        else
-        {
-            System.out.println("Asked AI of "+entityID+" but no entity had this ID");
-        }
     }
 
 }

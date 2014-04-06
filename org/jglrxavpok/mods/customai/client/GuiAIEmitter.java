@@ -7,10 +7,23 @@ import java.util.Iterator;
 import java.util.List;
 
 import cpw.mods.fml.common.network.internal.FMLNetworkHandler;
+
+import org.jglrxavpok.mods.customai.ModCustomAI;
+import org.jglrxavpok.mods.customai.client.GuiCustomAI.ValueType;
+import org.jglrxavpok.mods.customai.common.CustomAIHelper;
+import org.jglrxavpok.mods.customai.common.Reflect;
+import org.jglrxavpok.mods.customai.common.TileEntityAIEmitter;
+import org.jglrxavpok.mods.customai.json.JSONException;
+import org.jglrxavpok.mods.customai.json.JSONObject;
+import org.jglrxavpok.mods.customai.netty.PacketUpdateAI;
+import org.jglrxavpok.mods.customai.netty.PacketUpdateAIEmitter;
+import org.lwjgl.opengl.GL11;
+
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.resources.Language;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
@@ -19,18 +32,26 @@ import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.entity.ai.EntityAITasks.EntityAITaskEntry;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 
-import org.jglrxavpok.mods.customai.ModCustomAI;
-import org.jglrxavpok.mods.customai.common.CustomAIHelper;
-import org.jglrxavpok.mods.customai.common.Reflect;
-import org.jglrxavpok.mods.customai.json.JSONObject;
-import org.jglrxavpok.mods.customai.netty.PacketUpdateAI;
-import org.lwjgl.opengl.GL11;
-
-public class GuiCustomAI extends GuiScreen
+public class GuiAIEmitter extends GuiScreen
 {
 
+    private EntityPlayer player;
+    private World worldObj;
+    private TileEntityAIEmitter tileEntity;
+
+    public GuiAIEmitter(EntityPlayer player, World world, TileEntityAIEmitter tileEntity, int x, int y, int z)
+    {
+        this.player = player;
+        this.worldObj = world;
+        this.tileEntity = tileEntity;
+        currentPart = "Main";
+        targetTasks = tileEntity.getTargetTasks();
+        tasks = tileEntity.getTasks();
+    }
+    
     public static enum ValueType
     {
         Integer, Float, Double, String, EntityList, Boolean
@@ -41,10 +62,6 @@ public class GuiCustomAI extends GuiScreen
     public static final ResourceLocation backgroundTexture2 = new ResourceLocation(ModCustomAI.MODID, "textures/gui/ai_rewriter_gui2.png");
     public static final ResourceLocation backgroundTexture3 = new ResourceLocation(ModCustomAI.MODID, "textures/gui/ai_rewriter_gui3.png");
     public static final ResourceLocation addFieldBackgroundTexture = new ResourceLocation(ModCustomAI.MODID, "textures/gui/ai_rewriter_gui_add.png");
-    private EntityPlayer player;
-    private World worldObj;
-    
-    private Entity entity;
     
     protected int xSize = 176;
     /**
@@ -59,12 +76,12 @@ public class GuiCustomAI extends GuiScreen
     private String currentPart;
     private GuiButton selectedButton;
     private GuiList targetList;
-    private List<EntityAITaskEntry> targetTasks;
+    private List<JSONObject> targetTasks;
     private GuiList tasksList;
-    private List<EntityAITaskEntry> tasks;
+    private List<JSONObject> tasks;
     private float currentTranslation;
     private int aimedTranslation;
-    private EntityAITaskEntry currentEntry;
+    private JSONObject currentEntry;
     private JSONObject entryData;
     private ArrayList<GuiTextField2> secondPartFields = new ArrayList<GuiTextField2>();
     private int currentEntryIndex;
@@ -74,17 +91,8 @@ public class GuiCustomAI extends GuiScreen
     private boolean isWindowAddPresent = false;
     private ArrayList<ActionListener> listeners = new ArrayList<ActionListener>();
     private GuiComboBox tasksBox;
+    private GuiComboBox currentEntitiesBox;
 
-    public GuiCustomAI(EntityPlayer player, World world, Entity entity)
-    {
-        this.player = player;
-        this.worldObj = world;
-        this.entity = entity;
-        currentPart = "Main";
-        targetTasks = CustomAIHelper.getTargetTasksList(entity);
-        tasks = CustomAIHelper.getTasksList(entity);
-    }
-    
     @SuppressWarnings("unchecked")
     public void displayPart(String partName)
     {
@@ -134,7 +142,19 @@ public class GuiCustomAI extends GuiScreen
         GuiListSlot[] slots = new GuiListSlot[targetTasks.size()+1];
         for(int i = 0;i<slots.length-1;i++)
         {
-            slots[i] = new GuiIAListSlot(i+100,targetTasks.get(i));
+            slots[i] = new GuiIAListSlot(i+100,null);
+            try
+            {
+                slots[i].displayString = CustomAIHelper.getNameFromClass((Class<? extends EntityAIBase>) Class.forName(targetTasks.get(i).getString("type")));
+            }
+            catch (ClassNotFoundException e)
+            {
+                e.printStackTrace();
+            }
+            catch (JSONException e)
+            {
+                e.printStackTrace();
+            }
         }
         slots[slots.length-1] = new GuiAddToListSlot(-20);
         ScaledResolution res = new ScaledResolution(mc.gameSettings, mc.displayWidth,mc.displayHeight);
@@ -151,7 +171,19 @@ public class GuiCustomAI extends GuiScreen
         GuiListSlot[] slots = new GuiListSlot[tasks.size()+1];
         for(int i = 0;i<slots.length-1;i++)
         {
-            slots[i] = new GuiIAListSlot(i+100,tasks.get(i));
+            slots[i] = new GuiIAListSlot(i+100,null);
+            try
+            {
+                slots[i].displayString = CustomAIHelper.getNameFromClass((Class<? extends EntityAIBase>) Class.forName(tasks.get(i).getString("type")));
+            }
+            catch (ClassNotFoundException e)
+            {
+                e.printStackTrace();
+            }
+            catch (JSONException e)
+            {
+                e.printStackTrace();
+            }
         }
         slots[slots.length-1] = new GuiAddToListSlot(-20);
         ScaledResolution res = new ScaledResolution(mc.gameSettings, mc.displayWidth,mc.displayHeight);
@@ -314,6 +346,7 @@ public class GuiCustomAI extends GuiScreen
         }
     }
     
+    @SuppressWarnings("unchecked")
     public void actionPerformed(int mx, int my, int buttonID, GuiButton button)
     {
         for(ActionListener a : listeners )
@@ -322,7 +355,7 @@ public class GuiCustomAI extends GuiScreen
         }
         if(button.id == 0)
         {
-            if(currentEntry != null && currentEntry.action != null)
+            if(currentEntry != null)
             {
                 for(GuiTextField2 field : secondPartFields)
                 {
@@ -334,15 +367,15 @@ public class GuiCustomAI extends GuiScreen
                 }
                 else
                     tasks.remove(currentEntry);
-                this.currentEntry = CustomAIHelper.generateAIFromJSON(entity, entryData.toString());
+                this.currentEntry = entryData;
                 if(isTarget)
                 {
-                    targetTasks.add(currentEntryIndex, currentEntry);
+                    targetTasks.add(currentEntryIndex, entryData);
                 }
                 else
-                    tasks.add(currentEntryIndex, currentEntry);
+                    tasks.add(currentEntryIndex, entryData);
             }
-            ModCustomAI.packetPipeline.sendToServer(new PacketUpdateAI(entity.getEntityId(), tasks, targetTasks));
+            ModCustomAI.packetPipeline.sendToServer(new PacketUpdateAIEmitter(tileEntity.xCoord,tileEntity.yCoord,tileEntity.zCoord, tasks, targetTasks));
             FMLNetworkHandler.openGui(player, ModCustomAI.instance, -1, worldObj, 0, 0, 0);
         }
         else if(button instanceof GuiListSlot)
@@ -366,19 +399,17 @@ public class GuiCustomAI extends GuiScreen
             this.isWindowAddPresent = false;
             if(tasksBox != null && this.tasksBox.getValue() != null)
             {
-                EntityAITaskEntry entry = null;
                 boolean flag = true;
                 entryData = CustomAIHelper.createDummyJSON(CustomAIHelper.getClassFromName(this.tasksBox.getValue()));
-                currentEntry = CustomAIHelper.generateAIFromJSON(entity, entryData.toString());
-                
+                currentEntry = entryData;
                 if(currentPart.equals("Tasks"))
                 {
-                    tasks.add(entry);
+                    tasks.add(entryData);
                     currentEntryIndex = tasks.size()-1;
                 }
                 else
                 {
-                    targetTasks.add(entry);
+                    targetTasks.add(entryData);
                     currentEntryIndex = targetTasks.size()-1;
                     flag = false;
                 }
@@ -423,7 +454,7 @@ public class GuiCustomAI extends GuiScreen
                     }
                     else
                         tasks.remove(currentEntry);
-                    this.currentEntry = CustomAIHelper.generateAIFromJSON(entity, entryData.toString());
+                    this.currentEntry = entryData;
                     if(isTarget)
                     {
                         targetTasks.add(currentEntryIndex, currentEntry);
@@ -431,11 +462,10 @@ public class GuiCustomAI extends GuiScreen
                     else
                         tasks.add(currentEntryIndex, currentEntry);
                 }
-                EntityAITaskEntry entry = this.tasks.get(button.id-100);
                 currentEntryIndex = button.id-100;
-                this.currentEntry = entry;
+                this.currentEntry = this.tasks.get(button.id-100);
                 isTarget = false;
-                buildSecondPart(entry);
+                buildSecondPart(currentEntry);
             }
             else if(button.id == -20)
             {
@@ -470,6 +500,7 @@ public class GuiCustomAI extends GuiScreen
                     for(GuiTextField2 field : secondPartFields)
                     {
                         entryData.put(field.getValueName(),field.getText());
+                        System.out.println("Set "+field.getValueName()+" to "+field.getText());
                     }
                     if(isTarget)
                     {
@@ -477,7 +508,7 @@ public class GuiCustomAI extends GuiScreen
                     }
                     else
                         tasks.remove(currentEntry);
-                    this.currentEntry = CustomAIHelper.generateAIFromJSON(entity, entryData.toString());
+                    this.currentEntry = entryData;
                     if(isTarget)
                     {
                         targetTasks.add(currentEntryIndex, currentEntry);
@@ -485,7 +516,7 @@ public class GuiCustomAI extends GuiScreen
                     else
                         tasks.add(currentEntryIndex, currentEntry);
                 }
-                EntityAITaskEntry entry = this.targetTasks.get(button.id-100);
+                JSONObject entry = this.targetTasks.get(button.id-100);
                 currentEntryIndex = button.id-100;
                 this.currentEntry = entry;
                 isTarget = true;
@@ -548,12 +579,12 @@ public class GuiCustomAI extends GuiScreen
                 ;
             else if(bool)
             {
-                if(target && CustomAIHelper.isSuitableForEntity((EntityLiving) entity, c))
+                if(target)
                     list.add(CustomAIHelper.getNameFromClass(c));
             }
             else
             {
-                if(!target && CustomAIHelper.isSuitableForEntity((EntityLiving) entity, c))
+                if(!target)
                     list.add(CustomAIHelper.getNameFromClass(c));
             }
         }
@@ -562,7 +593,7 @@ public class GuiCustomAI extends GuiScreen
     }
 
     @SuppressWarnings("unchecked")
-    private void buildSecondPart(EntityAITaskEntry entry)
+    private void buildSecondPart(JSONObject entry)
     {
         this.secondPart.clear();
         this.secondPartFields.clear();
@@ -573,7 +604,7 @@ public class GuiCustomAI extends GuiScreen
         int height1 = res.getScaledHeight();
         try
         {
-            entryData = CustomAIHelper.generateJSONFromAI((EntityLiving) entity, entry);
+            entryData = entry;
             secondPart.add(new GuiLabel(width1/2+50,height1/2-60,"0"));
             secondPart.add(new GuiLabel(width1/2-75,height1/2-60,"Priority:"));
             secondPart.get(0).displayString = ""+entryData.getInt("priority");
@@ -786,10 +817,10 @@ public class GuiCustomAI extends GuiScreen
             int y = height1/2-h/2;
             mc.fontRenderer.drawStringWithShadow(s, x, y, 0xFFFFFF);
             
-            s = getTranslation("ai.newTask")+":";
+            s = getTranslation("ai.newTask");
             x = width1/2-w/2+10;
             y = height1/2-h/2+25;
-            mc.fontRenderer.drawStringWithShadow(s, x, y, 0xFFFFFF);
+            mc.fontRenderer.drawStringWithShadow(s+":", x, y, 0xFFFFFF);
 
             for(int i = 0;i<windowAddButtons.size();i++)
             {
@@ -802,6 +833,22 @@ public class GuiCustomAI extends GuiScreen
         }
         GL11.glEnable(GL11.GL_LIGHTING);
 
+    }
+
+    
+
+    private String getTranslation(String string)
+    {
+        return specialFormat(ModCustomAI.getTranslation(string));
+    }
+
+    private String specialFormat(String s)
+    {
+        return s.replace("${PlayerName}", player.getCommandSenderName())
+                .replace("${CurrentPart}", this.currentPart.equals("Tasks")? ModCustomAI.getTranslation("ai.tasks", false) : currentPart.equals("Target tasks") ? ModCustomAI.getTranslation("ai.targetTasks", false) : ModCustomAI.getTranslation("ai.mainPart", false))
+                .replace("${ListSize}", currentPart.equals("Main") ? "" : "("+(""+(this.currentPart.equals("Tasks")?tasks.size():targetTasks.size()))+")")
+                .replace("${Type}", ModCustomAI.getTranslation("tile.ai_emitter.name", false))
+                .replace("${EntityName}", ModCustomAI.getTranslation("tile.ai_emitter.name", false));
     }
 
     @SuppressWarnings("unused")
@@ -840,7 +887,18 @@ public class GuiCustomAI extends GuiScreen
             int y = height/2-ySize/2;
             String s1 = getTranslation("ai.waiting");
             if(currentEntry != null)
-                s1 = CustomAIHelper.getNameForTask(this.currentEntry.action);
+                try
+                {
+                    s1 = CustomAIHelper.getNameForTask((Class<? extends EntityAIBase>) Class.forName(this.currentEntry.getString("type")));
+                }
+                catch (ClassNotFoundException e)
+                {
+                    e.printStackTrace();
+                }
+                catch (JSONException e)
+                {
+                    e.printStackTrace();
+                }
             fontRendererObj.drawStringWithShadow(s1, (int) (x-fontRendererObj.getStringWidth(s1)/2-currentTranslation), y, 0xFFFFFF);
             GL11.glPopMatrix();
             GL11.glEnable(GL11.GL_LIGHTING);
@@ -860,8 +918,9 @@ public class GuiCustomAI extends GuiScreen
         int y = height/2-ySize/2;
         String s1 = getTranslation("ai.title");
         fontRendererObj.drawStringWithShadow(s1, (int) (x-fontRendererObj.getStringWidth(s1)/2+currentTranslation), y, 0xFFFFFF);
-        s1 = getTranslation("ai.editing");
-        fontRendererObj.drawStringWithShadow(s1, (int) (x-fontRendererObj.getStringWidth(s1)/2+currentTranslation), y+15, 0xFFFFFF);
+        String s = getTranslation("ai.editing");
+        fontRendererObj.drawStringWithShadow(s, (int) (x-fontRendererObj.getStringWidth(s)/2+1+currentTranslation), y+15, 0xFFFFFF);
+        
         for(int i = 0;i<secondPart.size();i++)
         {
             GuiButton button = secondPart.get(i);
@@ -895,17 +954,4 @@ public class GuiCustomAI extends GuiScreen
         GL11.glPopMatrix();
     }
 
-    private String getTranslation(String string)
-    {
-        return specialFormat(ModCustomAI.getTranslation(string));
-    }
-
-    private String specialFormat(String s)
-    {
-        return s.replace("${PlayerName}", player.getCommandSenderName())
-                .replace("${CurrentPart}", this.currentPart.equals("Tasks")? ModCustomAI.getTranslation("ai.tasks", false) : currentPart.equals("Target tasks") ? ModCustomAI.getTranslation("ai.targetTasks", false) : ModCustomAI.getTranslation("ai.mainPart", false))
-                .replace("${ListSize}", currentPart.equals("Main") ? "" : "("+(""+(this.currentPart.equals("Tasks")?tasks.size():targetTasks.size()))+")")
-                .replace("${Type}", ModCustomAI.getTranslation("item.ai_rewriter.name", false))
-                .replace("${EntityName}", entity.getCommandSenderName()+"(ID:"+entity.getEntityId()+")");
-    }
 }

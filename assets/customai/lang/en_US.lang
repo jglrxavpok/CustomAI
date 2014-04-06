@@ -1,0 +1,16 @@
+tile.ai_emitter.name=AI Emitter
+item.ai_rewriter.name=AI Rewriter
+ai.addNewTask=Add a new task
+ai.newTask=New task
+ai.waiting=Waiting for task
+ai.tasks=Tasks
+ai.targetTasks=Target tasks
+ai.title=${Type} - ${CurrentPart} ${ListSize}
+ai.editing=Editing ${EntityName}
+ai.mainPart=Main
+ai.remove=Remove task
+ai.confirm=Confirm
+ai.cancel=Cancel
+ai.rewriteTasks=Rewrite Tasks
+ai.rewriteTargetTasks=Rewrite Target tasks
+ai.return=Back

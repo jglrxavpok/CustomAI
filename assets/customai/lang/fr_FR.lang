@@ -1,0 +1,16 @@
+tile.ai_emitter.name=Emitteur d'IA
+item.ai_rewriter.name=Remplaceur d'IA
+ai.addNewTask=Ajouter une nouvelle tâche
+ai.newTask=Nouvelle tâche
+ai.waiting=En attente
+ai.tasks=Tâches
+ai.targetTasks=Tâches de ciblage
+ai.title=${Type} - ${CurrentPart} ${ListSize}
+ai.editing=Edition de ${EntityName}
+ai.mainPart=Page principale
+ai.remove=Retirer la tâche
+ai.confirm=Confirmer
+ai.cancel=Annuler
+ai.rewriteTasks=Réécrire les tâches
+ai.rewriteTargetTasks=Réécrire les tâches de ciblage
+ai.return=Retour

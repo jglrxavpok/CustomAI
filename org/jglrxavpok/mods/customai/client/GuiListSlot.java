@@ -9,7 +9,7 @@ public class GuiListSlot extends GuiButton
 
     public GuiListSlot(int par1)
     {
-        super(par1, 0,0,Math.random()+"");
+        super(par1, 0,0,"Missigno");
     }
 
     public void setWidth(int width)

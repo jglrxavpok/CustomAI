@@ -61,7 +61,16 @@ public class CustomAIEntityExtendedProperties implements IExtendedEntityProperti
                 CustomAIHelper.getTasksList(entity).clear();
                 for(int i = 0;i<tasksNBT.tagCount();i++)
                 {
-                    CustomAIHelper.getTasksList(entity).add(CustomAIHelper.generateAIFromJSON(entity, tasksNBT.getStringTagAt(i)));
+                    try
+                    {
+                        EntityAITaskEntry e = CustomAIHelper.generateAIFromJSON(entity, tasksNBT.getStringTagAt(i));
+                        if(e != null && e.action != null)
+                            CustomAIHelper.getTasksList(entity).add(e);
+                    }
+                    catch(Exception e)
+                    {
+                        ;
+                    }
                 }
             }
             if(targetTasksNBT == null)
@@ -73,7 +82,16 @@ public class CustomAIEntityExtendedProperties implements IExtendedEntityProperti
                 CustomAIHelper.getTargetTasksList(entity).clear();
                 for(int i = 0;i<targetTasksNBT.tagCount();i++)
                 {
-                    CustomAIHelper.getTargetTasksList(entity).add(CustomAIHelper.generateAIFromJSON(entity, targetTasksNBT.getStringTagAt(i)));
+                    try
+                    {
+                        EntityAITaskEntry e = CustomAIHelper.generateAIFromJSON(entity, targetTasksNBT.getStringTagAt(i));
+                        if(e != null && e.action != null)
+                            CustomAIHelper.getTargetTasksList(entity).add(e);
+                    }
+                    catch(Exception e)
+                    {
+                        ;
+                    }
                 }
             }
         }
