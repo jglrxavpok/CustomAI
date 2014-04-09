@@ -2,6 +2,9 @@ package org.jglrxavpok.mods.customai;
 
 import static org.jglrxavpok.mods.customai.common.CustomAIHelper.registerAI;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -16,6 +19,7 @@ import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.network.IGuiHandler;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
+import cpw.mods.fml.relauncher.Side;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.server.CommandSummon;
 import net.minecraft.entity.ai.EntityAIArrowAttack;
@@ -90,10 +94,11 @@ import org.jglrxavpok.mods.customai.ai.EntityAIFleeSunEvenNotBurning;
 import org.jglrxavpok.mods.customai.ai.EntityAIFollowEntity;
 import org.jglrxavpok.mods.customai.ai.EntityAITeleportRandomly;
 import org.jglrxavpok.mods.customai.common.BlockAIEmitter;
-import org.jglrxavpok.mods.customai.common.CommandSetAI;
 import org.jglrxavpok.mods.customai.common.CommandTestForMod;
+import org.jglrxavpok.mods.customai.common.ConfigHandler;
 import org.jglrxavpok.mods.customai.common.CustomAIGuiHandler;
 import org.jglrxavpok.mods.customai.common.CustomAIHelper;
+import org.jglrxavpok.mods.customai.common.EntityAIFactory;
 import org.jglrxavpok.mods.customai.common.EntityEvents;
 import org.jglrxavpok.mods.customai.common.Proxy;
 import org.jglrxavpok.mods.customai.common.TileEntityAIEmitter;
@@ -102,13 +107,14 @@ import org.jglrxavpok.mods.customai.json.JSONObject;
 import org.jglrxavpok.mods.customai.netty.AbstractPacket;
 import org.jglrxavpok.mods.customai.netty.PacketPipeline;
 
-@Mod(modid=ModCustomAI.MODID, name = "Custom AI", version = "1.0")
+@Mod(modid=ModCustomAI.MODID, name = "Custom AI", version = "1.0.2")
 public class ModCustomAI
 {
 
     public static final PacketPipeline packetPipeline = new PacketPipeline("org.jglrxavpok.mods.customai.netty", AbstractPacket.class);
     public static final String MODID = "customai";
     private IGuiHandler guiHandler = new CustomAIGuiHandler();
+    public static ConfigHandler config;
     public static AwesomeAIRewriterItem rewriterItem;
     
     @Instance(MODID)
@@ -223,6 +229,28 @@ public class ModCustomAI
         GameRegistry.addRecipe(new ItemStack(aiEmitterBlock,1), emitterCraft);
         
         proxy.registerStuff();
+        
+        if(event.getSide().isClient() && false)
+        {
+            File file = new File(event.getSuggestedConfigurationFile().getParentFile(), "AITasks.cvs");
+            try
+            {
+                if(!file.exists())
+                    file.createNewFile();
+                FileOutputStream out = new FileOutputStream(file);
+                String content = CustomAIHelper.getCVSList();
+                out.write(content.getBytes());
+                out.flush();
+                out.close();
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
+        
+        config = new ConfigHandler(event.getSuggestedConfigurationFile());
+        config.save();
     }
     
     @EventHandler
@@ -292,7 +320,11 @@ public class ModCustomAI
                                     e.setCanceled(true);
                                     return;
                                 }
-                                Class<? extends EntityAIBase> clazz = (Class<? extends EntityAIBase>) Class.forName(current.getString("type"));
+                                Class<? extends EntityAIBase> clazz = CustomAIHelper.tryToGetAITaskFromName(current.getString("type"));
+                                if(clazz == null)
+                                {
+                                    clazz = (Class<? extends EntityAIBase>) Class.forName(current.getString("type"));
+                                }
                                 JSONObject object = CustomAIHelper.createDummyJSON(clazz);
                                 Iterator<String> it = object.keys();
                                 boolean flag1 = true;

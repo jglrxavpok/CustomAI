@@ -2,16 +2,16 @@ package org.jglrxavpok.mods.customai.common;
 
 import java.util.List;
 
-import cpw.mods.fml.common.FMLCommonHandler;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.ai.EntityAITasks.EntityAITaskEntry;
-import net.minecraft.entity.monster.EntityCreeper;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IExtendedEntityProperties;
+
+import org.jglrxavpok.mods.customai.json.JSONObject;
 
 public class CustomAIEntityExtendedProperties implements IExtendedEntityProperties
 {
@@ -63,7 +63,7 @@ public class CustomAIEntityExtendedProperties implements IExtendedEntityProperti
                 {
                     try
                     {
-                        EntityAITaskEntry e = CustomAIHelper.generateAIFromJSON(entity, tasksNBT.getStringTagAt(i));
+                        EntityAITaskEntry e = EntityAIFactory.instance().generateAIBaseWithExceptions(entity, new JSONObject(tasksNBT.getStringTagAt(i)));
                         if(e != null && e.action != null)
                             CustomAIHelper.getTasksList(entity).add(e);
                     }

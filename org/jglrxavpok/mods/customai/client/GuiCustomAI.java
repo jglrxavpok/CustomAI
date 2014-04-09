@@ -134,6 +134,7 @@ public class GuiCustomAI extends GuiScreen
         GuiListSlot[] slots = new GuiListSlot[targetTasks.size()+1];
         for(int i = 0;i<slots.length-1;i++)
         {
+            if(targetTasks.get(i) != null && targetTasks.get(i).action != null)
             slots[i] = new GuiIAListSlot(i+100,targetTasks.get(i));
         }
         slots[slots.length-1] = new GuiAddToListSlot(-20);
@@ -151,7 +152,8 @@ public class GuiCustomAI extends GuiScreen
         GuiListSlot[] slots = new GuiListSlot[tasks.size()+1];
         for(int i = 0;i<slots.length-1;i++)
         {
-            slots[i] = new GuiIAListSlot(i+100,tasks.get(i));
+            if(tasks.get(i) != null && tasks.get(i).action != null)
+                slots[i] = new GuiIAListSlot(i+100,tasks.get(i));
         }
         slots[slots.length-1] = new GuiAddToListSlot(-20);
         ScaledResolution res = new ScaledResolution(mc.gameSettings, mc.displayWidth,mc.displayHeight);
@@ -335,6 +337,7 @@ public class GuiCustomAI extends GuiScreen
                 else
                     tasks.remove(currentEntry);
                 this.currentEntry = CustomAIHelper.generateAIFromJSON(entity, entryData.toString());
+                currentEntryIndex = correctEntryIndex();
                 if(isTarget)
                 {
                     targetTasks.add(currentEntryIndex, currentEntry);
@@ -366,19 +369,18 @@ public class GuiCustomAI extends GuiScreen
             this.isWindowAddPresent = false;
             if(tasksBox != null && this.tasksBox.getValue() != null)
             {
-                EntityAITaskEntry entry = null;
                 boolean flag = true;
                 entryData = CustomAIHelper.createDummyJSON(CustomAIHelper.getClassFromName(this.tasksBox.getValue()));
                 currentEntry = CustomAIHelper.generateAIFromJSON(entity, entryData.toString());
                 
                 if(currentPart.equals("Tasks"))
                 {
-                    tasks.add(entry);
+                    tasks.add(currentEntry);
                     currentEntryIndex = tasks.size()-1;
                 }
                 else
                 {
-                    targetTasks.add(entry);
+                    targetTasks.add(currentEntry);
                     currentEntryIndex = targetTasks.size()-1;
                     flag = false;
                 }
@@ -400,6 +402,8 @@ public class GuiCustomAI extends GuiScreen
         {
             if(button.id == 3)
             {
+                if(currentEntry == null)
+                    isTarget = true;
                 this.displayPart("Target tasks");
             }
             else if(button.id == 4)
@@ -424,6 +428,7 @@ public class GuiCustomAI extends GuiScreen
                     else
                         tasks.remove(currentEntry);
                     this.currentEntry = CustomAIHelper.generateAIFromJSON(entity, entryData.toString());
+                    currentEntryIndex = correctEntryIndex();
                     if(isTarget)
                     {
                         targetTasks.add(currentEntryIndex, currentEntry);
@@ -478,6 +483,7 @@ public class GuiCustomAI extends GuiScreen
                     else
                         tasks.remove(currentEntry);
                     this.currentEntry = CustomAIHelper.generateAIFromJSON(entity, entryData.toString());
+                    currentEntryIndex= correctEntryIndex();
                     if(isTarget)
                     {
                         targetTasks.add(currentEntryIndex, currentEntry);
@@ -517,6 +523,19 @@ public class GuiCustomAI extends GuiScreen
         }
     }
     
+    private int correctEntryIndex()
+    {
+        if(currentEntryIndex < 0)
+        {
+            currentEntryIndex = 0;
+        }
+        else if(currentEntryIndex >= (isTarget ? targetTasks.size() : tasks.size()))
+        {
+            currentEntryIndex = isTarget ? targetTasks.size() : tasks.size();
+        }
+        return currentEntryIndex;
+    }
+
     private void createWindow()
     {
         windowAddButtons.clear();
@@ -669,6 +688,7 @@ public class GuiCustomAI extends GuiScreen
                 result.add(n);
             }
         }
+        result.add("Player");
         String[] array = result.toArray(new String[0]);
         Arrays.sort(array);
         return array;

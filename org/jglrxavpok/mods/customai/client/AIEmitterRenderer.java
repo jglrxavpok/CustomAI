@@ -492,11 +492,11 @@ public class AIEmitterRenderer extends TileEntitySpecialRenderer implements IInv
         }
         CasteljauAlgorithm casteljau = new CasteljauAlgorithm(xValues,yValues,zValues,xValues.length);
         double last[] = new double[]{xValues[0],yValues[0],zValues[0]};
-        double segments = 0.005;
+        double segments = 1d/ModCustomAI.config.getDouble("EmitterCurvesSegmentsNumber", 15);
         double minU = 0;
         double maxU = 1;
-        double minV = 0+((double)e.ticksExisted/10D)+(segments/0.01D);
-        double maxV = 1+((double)e.ticksExisted/10D)+(segments/0.01D);
+        double minV = 0+((double)e.ticksExisted/10D)+(segments/0.01d);
+        double maxV = 1+((double)e.ticksExisted/10D)+(segments/0.01d);
         for(double t = 0;t<=1;t+=segments)
         {
             double[] values = casteljau.getXYZvalues(t);

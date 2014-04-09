@@ -3,9 +3,13 @@ package org.jglrxavpok.mods.customai.common;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import cpw.mods.fml.common.ObfuscationReflectionHelper;
 import net.minecraft.entity.Entity;
@@ -372,5 +376,76 @@ public final class CustomAIHelper
     public static EntityAITaskEntry generateAIFromJSON(EntityLiving entity, JSONObject json)
     {
         return EntityAIFactory.instance().generateAIBase(entity, json);
+    }
+
+    /**
+     * Only for testing/map making purpose, never used actually by the mod
+     * @return
+     */
+    public static String getCVSList()
+    {
+        String s = "Name;Class;Field1=DefaultValue1|Field2=DefaultValue2\n";
+        Set<Class<? extends EntityAIBase>> keyset = map.keySet();
+        Iterator<Class<? extends EntityAIBase>> it = keyset.iterator();
+        final HashMap<String, String> tmpMap = new HashMap<String, String>();
+        ArrayList<String> tmpList = new ArrayList<String>();
+        while(it.hasNext())
+        {
+            Class<? extends EntityAIBase> c = it.next();
+            String name = map.get(c);
+            String list = createList(EntityAIFactory.instance().createDummyJSON(c));
+            String s1 = name+";"+c.getCanonicalName()+";"+list;
+            tmpMap.put(s1, name);
+            tmpList.add(s1);
+        }
+        Collections.sort(tmpList, new Comparator<String>()
+                {
+                    @Override
+                    public int compare(String o1, String o2)
+                    {
+                        String s1 = tmpMap.get(o1);
+                        String s2 = tmpMap.get(o2);
+                        return s1.compareTo(s2);
+                    }
+                });
+        for(String t : tmpList)
+        {
+            s+=t+"\n";
+        }
+        return s;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static String createList(JSONObject json)
+    {
+        String list = "";
+        Iterator<String> it = json.keys();
+        int index = 0;
+        while(it.hasNext())
+        {
+            String key = it.next();
+            if(index++ != 0)
+            {
+                list+=" | ";
+            }
+            list+=key+"="+json.get(key);
+        }
+        return list;
+    }
+
+    public static Class<? extends EntityAIBase> tryToGetAITaskFromName(String clazz)
+    {
+        Set<Class<? extends EntityAIBase>> tasks = map.keySet();
+        Iterator<Class<? extends EntityAIBase>> it = tasks.iterator();
+        while(it.hasNext())
+        {
+            Class<? extends EntityAIBase> c = it.next();
+            String s = map.get(c);
+            if(s.equalsIgnoreCase(clazz))
+            {
+                return c;
+            }
+        }
+        return null;
     }
 }

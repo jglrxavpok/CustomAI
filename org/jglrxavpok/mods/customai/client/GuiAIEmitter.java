@@ -368,6 +368,7 @@ public class GuiAIEmitter extends GuiScreen
                 else
                     tasks.remove(currentEntry);
                 this.currentEntry = entryData;
+                currentEntryIndex = correctEntryIndex();
                 if(isTarget)
                 {
                     targetTasks.add(currentEntryIndex, entryData);
@@ -455,6 +456,7 @@ public class GuiAIEmitter extends GuiScreen
                     else
                         tasks.remove(currentEntry);
                     this.currentEntry = entryData;
+                    currentEntryIndex = correctEntryIndex();
                     if(isTarget)
                     {
                         targetTasks.add(currentEntryIndex, currentEntry);
@@ -509,6 +511,7 @@ public class GuiAIEmitter extends GuiScreen
                     else
                         tasks.remove(currentEntry);
                     this.currentEntry = entryData;
+                    currentEntryIndex = correctEntryIndex();
                     if(isTarget)
                     {
                         targetTasks.add(currentEntryIndex, currentEntry);
@@ -546,6 +549,19 @@ public class GuiAIEmitter extends GuiScreen
                 ((GuiSpinnerButton)button).handleClicked();
             }
         }
+    }
+    
+    private int correctEntryIndex()
+    {
+        if(currentEntryIndex < 0)
+        {
+            currentEntryIndex = 0;
+        }
+        else if(currentEntryIndex >= (isTarget ? targetTasks.size() : tasks.size()))
+        {
+            currentEntryIndex = isTarget ? targetTasks.size() : tasks.size();
+        }
+        return currentEntryIndex;
     }
     
     private void createWindow()
@@ -700,6 +716,7 @@ public class GuiAIEmitter extends GuiScreen
                 result.add(n);
             }
         }
+        result.add("Player");
         String[] array = result.toArray(new String[0]);
         Arrays.sort(array);
         return array;

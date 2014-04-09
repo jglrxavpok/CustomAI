@@ -32,6 +32,8 @@ public class GuiList
         currentScroll = 0;
         for(GuiListSlot slot : list)
         {
+            if(slot == null)
+                continue;
             slot.setWidth(width);
             slot.setHeight(slotHeight);
             slot.parent = this;
@@ -54,10 +56,13 @@ public class GuiList
         }
         currentScroll += MOUSE_WHEEL * speed;
         correctScrollValue();
+        int index = 0;
         for(int i =0;i<list.length;i++)
         {
+            if(list[i] == null)
+                continue;
             list[i].xPosition = this.xPos;
-            list[i].yPosition = this.yPos+currentScroll+i*slotHeight;
+            list[i].yPosition = this.yPos+currentScroll+(index++)*slotHeight;
             if(isInBounds(list[i],currentScroll))
             {
                 list[i].visible = true;
@@ -74,7 +79,13 @@ public class GuiList
     {
         if(currentScroll >= 0)
             currentScroll = 0;
-        int min = (list.length-(height/slotHeight))*this.slotHeight;
+        int nbr = 0;
+        for(GuiListSlot slot : list)
+        {
+            if(slot != null)
+                nbr++;
+        }
+        int min = (nbr-(height/slotHeight))*this.slotHeight;
         if(currentScroll <= -min)
         {
             currentScroll = -min;
@@ -129,6 +140,7 @@ public class GuiList
         GuiButton button1 = null;
         for(int i = 0;i<list.length;i++)
         {
+           if(list[i] != null)
            if(list[i].mousePressed(mc, mouseX, mouseY))
            {
                button1 = list[i];
