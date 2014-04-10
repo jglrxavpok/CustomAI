@@ -62,6 +62,7 @@ import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.passive.EntityWolf;
 
 import org.jglrxavpok.mods.customai.ai.EntityAIFleeSunEvenNotBurning;
+import org.jglrxavpok.mods.customai.common.aifactory.EntityAIFactory;
 import org.jglrxavpok.mods.customai.json.JSONObject;
 
 public final class CustomAIHelper
@@ -370,7 +371,7 @@ public final class CustomAIHelper
     
     public static JSONObject createDummyJSON(Class<? extends EntityAIBase> ai)
     {
-        return EntityAIFactory.instance().createDummyJSON(ai);
+        return EntityAIFactory.instance().createDefaultJSON(ai);
     }
 
     public static EntityAITaskEntry generateAIFromJSON(EntityLiving entity, JSONObject json)
@@ -393,7 +394,7 @@ public final class CustomAIHelper
         {
             Class<? extends EntityAIBase> c = it.next();
             String name = map.get(c);
-            String list = createList(EntityAIFactory.instance().createDummyJSON(c));
+            String list = createList(EntityAIFactory.instance().createDefaultJSON(c));
             String s1 = name+";"+c.getCanonicalName()+";"+list;
             tmpMap.put(s1, name);
             tmpList.add(s1);

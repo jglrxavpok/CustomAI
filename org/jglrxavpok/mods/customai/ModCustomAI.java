@@ -19,7 +19,6 @@ import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.network.IGuiHandler;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
-import cpw.mods.fml.relauncher.Side;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.server.CommandSummon;
 import net.minecraft.entity.ai.EntityAIArrowAttack;
@@ -90,18 +89,24 @@ import net.minecraft.util.StatCollector;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.CommandEvent;
 
+import org.jglrxavpok.mods.customai.ai.ArrowProjectile;
 import org.jglrxavpok.mods.customai.ai.EntityAIFleeSunEvenNotBurning;
 import org.jglrxavpok.mods.customai.ai.EntityAIFollowEntity;
+import org.jglrxavpok.mods.customai.ai.EntityAIRangeAttack;
 import org.jglrxavpok.mods.customai.ai.EntityAITeleportRandomly;
+import org.jglrxavpok.mods.customai.ai.Projectile;
+import org.jglrxavpok.mods.customai.ai.WitherSkullProjectile;
 import org.jglrxavpok.mods.customai.common.BlockAIEmitter;
 import org.jglrxavpok.mods.customai.common.CommandTestForMod;
 import org.jglrxavpok.mods.customai.common.ConfigHandler;
 import org.jglrxavpok.mods.customai.common.CustomAIGuiHandler;
 import org.jglrxavpok.mods.customai.common.CustomAIHelper;
-import org.jglrxavpok.mods.customai.common.EntityAIFactory;
 import org.jglrxavpok.mods.customai.common.EntityEvents;
 import org.jglrxavpok.mods.customai.common.Proxy;
 import org.jglrxavpok.mods.customai.common.TileEntityAIEmitter;
+import org.jglrxavpok.mods.customai.common.aifactory.EntityAIFactory;
+import org.jglrxavpok.mods.customai.common.aifactory.EntityAIVanillaWorker;
+import org.jglrxavpok.mods.customai.common.aifactory.EntityCustomAIAddedWorker;
 import org.jglrxavpok.mods.customai.items.AwesomeAIRewriterItem;
 import org.jglrxavpok.mods.customai.json.JSONObject;
 import org.jglrxavpok.mods.customai.netty.AbstractPacket;
@@ -125,6 +130,7 @@ public class ModCustomAI
     
     public static BlockAIEmitter aiEmitterBlock;
     
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @EventHandler
     public void preInit(FMLPreInitializationEvent event)
     {
@@ -132,12 +138,10 @@ public class ModCustomAI
         registerAI(EntityAICreeperSwell.class, "Creeper swell",false,0);
         registerAI(EntityAIAvoidEntity.class, "Avoid entity",false,1);
         registerAI(EntityAIAttackOnCollide.class, "Attack by collision",false,1);
-        registerAI(EntityAIWander.class, "Wander",false,0);
-        registerAI(EntityAIWatchClosest.class, "Watch closest entity",false,0);
         registerAI(EntityAILookIdle.class, "Look idle",false,0);
         registerAI(EntityAINearestAttackableTarget.class, "Attack nearest target",true,0,EntityAITarget.class);
         registerAI(EntityAIHurtByTarget.class, "Hurt by target",true,0,EntityAITarget.class);
-        registerAI(EntityAIArrowAttack.class, "Range attack",false,0);
+        registerAI(EntityAIArrowAttack.class, "Special range attack",false,0);
         registerAI(EntityAIBeg.class, "Beg for bone",false,0);
         registerAI(EntityAIBreakDoor.class, "Breaks doors",false,0,EntityAIDoorInteract.class);
         registerAI(EntityAIControlledByPlayer.class, "Controlled by player",false,0);
@@ -159,6 +163,9 @@ public class ModCustomAI
         registerAI(EntityAIMoveTowardsTarget.class,"Move towards target",false,0);
         registerAI(EntityAIOcelotAttack.class, "Ocelot's attack",false,1);
         registerAI(EntityAIOcelotSit.class, "Ocelot sitting",false,0);
+        registerAI(EntityAIOpenDoor.class, "Open doors",false,0,EntityAIDoorInteract.class);
+        registerAI(EntityAIOwnerHurtTarget.class, "On owner hurting target",true,0,EntityAITarget.class);
+        registerAI(EntityAIOwnerHurtByTarget.class, "On owner hurt",true,0,EntityAITarget.class);
         registerAI(EntityAIPlay.class, "Play",false,0);
         registerAI(EntityAIRestrictOpenDoor.class, "Open door restriction",false,0);
         registerAI(EntityAIRestrictSun.class, "Sun restriction",false,0);
@@ -167,10 +174,9 @@ public class ModCustomAI
         registerAI(EntityAITargetNonTamed.class, "Target when non-tamed",true,0);
         registerAI(EntityAITradePlayer.class, "Trade with player",false,0);
         registerAI(EntityAIVillagerMate.class, "Villager mating",false,0);
+        registerAI(EntityAIWander.class, "Wander",false,0);
+        registerAI(EntityAIWatchClosest.class, "Watch closest entity",false,0);
         registerAI(EntityAIWatchClosest2.class, "Watch closest entity (2)",false,0,EntityAIWatchClosest.class);
-        registerAI(EntityAIOpenDoor.class, "Open doors",false,0,EntityAIDoorInteract.class);
-        registerAI(EntityAIOwnerHurtTarget.class, "On owner hurting target",true,0,EntityAITarget.class);
-        registerAI(EntityAIOwnerHurtByTarget.class, "On owner hurt",true,0,EntityAITarget.class);
         
         // =============================
         // Start of custom AI
@@ -178,6 +184,7 @@ public class ModCustomAI
         registerAI(EntityAIFleeSunEvenNotBurning.class, "Flee sun even not burning",false,0);
         registerAI(EntityAIFollowEntity.class, "Follow entity", false,1);
         registerAI(EntityAITeleportRandomly.class, "Teleport randomly", false,0);
+        registerAI(EntityAIRangeAttack.class, "General range attack", false,0);
         // =============================
         // End of custom AI
         // =============================
@@ -191,6 +198,9 @@ public class ModCustomAI
         TileEntityAIEmitter.registerItems(EntityWolf.class, new Object[]{Items.bone});
         TileEntityAIEmitter.registerItems(EntityWitch.class, new Object[]{Items.potionitem});
         TileEntityAIEmitter.registerItems(EntityZombie.class, new Object[]{Items.rotten_flesh, Items.poisonous_potato});
+        
+        Projectile.register("Arrows", ArrowProjectile.class);
+        Projectile.register("Wither Skulls", WitherSkullProjectile.class);
         
         MinecraftForge.EVENT_BUS.register(new EntityEvents());
         MinecraftForge.EVENT_BUS.register(this);
@@ -229,6 +239,61 @@ public class ModCustomAI
         GameRegistry.addRecipe(new ItemStack(aiEmitterBlock,1), emitterCraft);
         
         proxy.registerStuff();
+        Class[] vanillaClasses = new Class[]
+            {
+                EntityAISwimming.class,
+                EntityAICreeperSwell.class,
+                EntityAIAvoidEntity.class,
+                EntityAIAttackOnCollide.class,
+                EntityAILookIdle.class,
+                EntityAINearestAttackableTarget.class,
+                EntityAIArrowAttack.class,
+                EntityAIBeg.class,
+                EntityAIBreakDoor.class,
+                EntityAIControlledByPlayer.class,
+                EntityAIDefendVillage.class,
+                EntityAIEatGrass.class,
+                EntityAIFleeSun.class,
+                EntityAIFollowGolem.class,
+                EntityAIFollowOwner.class,
+                EntityAIFollowParent.class,
+                EntityAIHurtByTarget.class,
+                EntityAILeapAtTarget.class,
+                EntityAILookAtTradePlayer.class,
+                EntityAIMate.class,
+                EntityAIPanic.class,
+                EntityAITempt.class,
+                EntityAIMoveIndoors.class,
+                EntityAIMoveThroughVillage.class,
+                EntityAIMoveTowardsRestriction.class,
+                EntityAIMoveTowardsTarget.class,
+                EntityAIOcelotAttack.class,
+                EntityAIOcelotSit.class,
+                EntityAIOpenDoor.class,
+                EntityAIOwnerHurtTarget.class,
+                EntityAIOwnerHurtByTarget.class,
+                EntityAIPlay.class,
+                EntityAIRestrictOpenDoor.class,
+                EntityAIRestrictSun.class,
+                EntityAIRunAroundLikeCrazy.class,
+                EntityAISit.class,
+                EntityAITargetNonTamed.class,
+                EntityAITradePlayer.class,
+                EntityAIVillagerMate.class,
+                EntityAIWander.class,
+                EntityAIWatchClosest.class,
+                EntityAIWatchClosest2.class,
+            };
+        EntityAIFactory.hireWorker(new EntityAIVanillaWorker(), vanillaClasses);
+        
+        Class[] addedClasses = new Class[]
+            {
+                EntityAIFleeSunEvenNotBurning.class,
+                EntityAIFollowEntity.class,
+                EntityAITeleportRandomly.class,
+                EntityAIRangeAttack.class
+            };
+        EntityAIFactory.hireWorker(new EntityCustomAIAddedWorker(), addedClasses);
         
         if(event.getSide().isClient() && false)
         {

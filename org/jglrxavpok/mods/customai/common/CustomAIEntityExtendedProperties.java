@@ -11,6 +11,7 @@ import net.minecraft.nbt.NBTTagString;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IExtendedEntityProperties;
 
+import org.jglrxavpok.mods.customai.common.aifactory.EntityAIFactory;
 import org.jglrxavpok.mods.customai.json.JSONObject;
 
 public class CustomAIEntityExtendedProperties implements IExtendedEntityProperties
@@ -32,11 +33,15 @@ public class CustomAIEntityExtendedProperties implements IExtendedEntityProperti
         NBTTagList tasksNBT = new NBTTagList();
         for(EntityAITaskEntry entry : targetTasks)
         {
-            targetTasksNBT.appendTag(new NBTTagString(CustomAIHelper.generateJSONFromAI((EntityLiving) entity, entry).toString()));
+            JSONObject json = CustomAIHelper.generateJSONFromAI((EntityLiving) entity, entry);
+            if(json != null)
+            targetTasksNBT.appendTag(new NBTTagString(json.toString()));
         }
         for(EntityAITaskEntry entry : tasks)
         {
-            tasksNBT.appendTag(new NBTTagString(CustomAIHelper.generateJSONFromAI((EntityLiving) entity, entry).toString()));
+            JSONObject json = CustomAIHelper.generateJSONFromAI((EntityLiving) entity, entry);
+            if(json != null)
+            tasksNBT.appendTag(new NBTTagString(json.toString()));
         }
         NBTTagCompound nbt = compound;
         nbt.setTag("CustomAITargetTasks", targetTasksNBT);
