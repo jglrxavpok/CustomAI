@@ -2,9 +2,6 @@ package org.jglrxavpok.mods.customai;
 
 import static org.jglrxavpok.mods.customai.common.CustomAIHelper.registerAI;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -107,12 +104,18 @@ import org.jglrxavpok.mods.customai.common.TileEntityAIEmitter;
 import org.jglrxavpok.mods.customai.common.aifactory.EntityAIFactory;
 import org.jglrxavpok.mods.customai.common.aifactory.EntityAIVanillaWorker;
 import org.jglrxavpok.mods.customai.common.aifactory.EntityCustomAIAddedWorker;
+import org.jglrxavpok.mods.customai.items.AICopierItem;
 import org.jglrxavpok.mods.customai.items.AwesomeAIRewriterItem;
 import org.jglrxavpok.mods.customai.json.JSONObject;
 import org.jglrxavpok.mods.customai.netty.AbstractPacket;
 import org.jglrxavpok.mods.customai.netty.PacketPipeline;
 
-@Mod(modid=ModCustomAI.MODID, name = "Custom AI", version = "1.0.2")
+/**
+ * Version number changed automatically by Gradle
+ * @author jglrxavpok
+ *
+ */
+@Mod(modid=ModCustomAI.MODID, name = "Custom AI", version = "@@MOD.VERSION@@")
 public class ModCustomAI
 {
 
@@ -120,7 +123,6 @@ public class ModCustomAI
     public static final String MODID = "customai";
     private IGuiHandler guiHandler = new CustomAIGuiHandler();
     public static ConfigHandler config;
-    public static AwesomeAIRewriterItem rewriterItem;
     
     @Instance(MODID)
     public static ModCustomAI instance;
@@ -129,6 +131,8 @@ public class ModCustomAI
     public static Proxy proxy;
     
     public static BlockAIEmitter aiEmitterBlock;
+    public static AwesomeAIRewriterItem rewriterItem;
+    public static AICopierItem copierItem;
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @EventHandler
@@ -214,6 +218,8 @@ public class ModCustomAI
         GameRegistry.registerBlock(aiEmitterBlock, "ai_emitter");
         GameRegistry.registerTileEntity(TileEntityAIEmitter.class, "AIEmitterTileEntity");
         
+        copierItem = new AICopierItem();
+        GameRegistry.registerItem(copierItem, "ai_copier");
         Object[] rewriterCraft = new Object[]
                 {
                 ""+' '+'P'+' ',
@@ -295,7 +301,7 @@ public class ModCustomAI
             };
         EntityAIFactory.hireWorker(new EntityCustomAIAddedWorker(), addedClasses);
         
-        if(event.getSide().isClient() && false)
+      /*  if(event.getSide().isClient())
         {
             File file = new File(event.getSuggestedConfigurationFile().getParentFile(), "AITasks.cvs");
             try
@@ -312,7 +318,7 @@ public class ModCustomAI
             {
                 e.printStackTrace();
             }
-        }
+        }*/
         
         config = new ConfigHandler(event.getSuggestedConfigurationFile());
         config.save();
@@ -352,7 +358,6 @@ public class ModCustomAI
         if(e.command instanceof CommandSummon)
         {
             NBTTagCompound nbttagcompound = new NBTTagCompound();
-            boolean flag = false;
 
             if (e.parameters.length >= 5)
             {
@@ -369,7 +374,6 @@ public class ModCustomAI
                     }
 
                     nbttagcompound = (NBTTagCompound)nbtbase;
-                    flag = true;
                     
                     if(nbttagcompound.hasKey("CustomAITasks"))
                     {
@@ -484,7 +488,7 @@ public class ModCustomAI
     @EventHandler
     public void serverStarting(FMLServerStartingEvent event)
     {
-        // event.registerServerCommand(new CommandSetAI()); // TODO: Finish SetAI command
+        // event.registerServerCommand(new CommandSetAI()); // TODO: Finish SetAI command (or scrap it ?)
         event.registerServerCommand(new CommandTestForMod());
     }
     

@@ -13,56 +13,14 @@ import java.util.Set;
 
 import cpw.mods.fml.common.ObfuscationReflectionHelper;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.EntityLiving;
-import net.minecraft.entity.IRangedAttackMob;
-import net.minecraft.entity.ai.EntityAIArrowAttack;
-import net.minecraft.entity.ai.EntityAIAttackOnCollide;
-import net.minecraft.entity.ai.EntityAIAvoidEntity;
 import net.minecraft.entity.ai.EntityAIBase;
-import net.minecraft.entity.ai.EntityAIBeg;
-import net.minecraft.entity.ai.EntityAICreeperSwell;
-import net.minecraft.entity.ai.EntityAIDefendVillage;
 import net.minecraft.entity.ai.EntityAIDoorInteract;
-import net.minecraft.entity.ai.EntityAIFleeSun;
-import net.minecraft.entity.ai.EntityAIFollowGolem;
-import net.minecraft.entity.ai.EntityAIFollowOwner;
-import net.minecraft.entity.ai.EntityAIFollowParent;
-import net.minecraft.entity.ai.EntityAIHurtByTarget;
-import net.minecraft.entity.ai.EntityAILookAtTradePlayer;
-import net.minecraft.entity.ai.EntityAILookAtVillager;
-import net.minecraft.entity.ai.EntityAIMate;
-import net.minecraft.entity.ai.EntityAIMoveIndoors;
-import net.minecraft.entity.ai.EntityAIMoveThroughVillage;
-import net.minecraft.entity.ai.EntityAINearestAttackableTarget;
-import net.minecraft.entity.ai.EntityAIOcelotSit;
-import net.minecraft.entity.ai.EntityAIOwnerHurtByTarget;
-import net.minecraft.entity.ai.EntityAIOwnerHurtTarget;
-import net.minecraft.entity.ai.EntityAIPanic;
-import net.minecraft.entity.ai.EntityAIPlay;
-import net.minecraft.entity.ai.EntityAIRestrictOpenDoor;
-import net.minecraft.entity.ai.EntityAIRestrictSun;
-import net.minecraft.entity.ai.EntityAIRunAroundLikeCrazy;
-import net.minecraft.entity.ai.EntityAISit;
-import net.minecraft.entity.ai.EntityAITargetNonTamed;
 import net.minecraft.entity.ai.EntityAITasks;
 import net.minecraft.entity.ai.EntityAITasks.EntityAITaskEntry;
-import net.minecraft.entity.ai.EntityAITempt;
-import net.minecraft.entity.ai.EntityAITradePlayer;
-import net.minecraft.entity.ai.EntityAIVillagerMate;
-import net.minecraft.entity.ai.EntityAIWander;
-import net.minecraft.entity.monster.EntityCreeper;
-import net.minecraft.entity.monster.EntityIronGolem;
-import net.minecraft.entity.passive.EntityAnimal;
-import net.minecraft.entity.passive.EntityHorse;
-import net.minecraft.entity.passive.EntityOcelot;
-import net.minecraft.entity.passive.EntitySheep;
-import net.minecraft.entity.passive.EntityTameable;
-import net.minecraft.entity.passive.EntityVillager;
-import net.minecraft.entity.passive.EntityWolf;
 
-import org.jglrxavpok.mods.customai.ai.EntityAIFleeSunEvenNotBurning;
 import org.jglrxavpok.mods.customai.common.aifactory.EntityAIFactory;
+import org.jglrxavpok.mods.customai.common.aifactory.EntityAIWorker;
 import org.jglrxavpok.mods.customai.json.JSONObject;
 
 public final class CustomAIHelper
@@ -72,7 +30,6 @@ public final class CustomAIHelper
     public static HashMap<Class<? extends EntityAIBase>, Boolean> isTarget = new HashMap<Class<? extends EntityAIBase>, Boolean>();
     public static HashMap<Class<? extends EntityAIBase>, Integer> ownerFields = new HashMap<Class<? extends EntityAIBase>, Integer>();
     public static HashMap<Class<? extends EntityAIBase>, Class<? extends EntityAIBase>> ownerFieldClasses = new HashMap<Class<? extends EntityAIBase>, Class<? extends EntityAIBase>>();
-    private static EntitySheep testSheep;
     
     public static final int TARGET_MUTEX_BITS = 1;
     public static final int MOVE_MUTEX_BITS = 1;
@@ -277,71 +234,10 @@ public final class CustomAIHelper
 
     public static boolean isSuitableForEntity(EntityLiving entity, Class<? extends EntityAIBase> c)
     {
-        if(c == EntityAICreeperSwell.class && !(entity instanceof EntityCreeper))
+        EntityAIWorker worker = EntityAIFactory.instance().getWorkerFromClass(c);
+        if(worker == null)
             return false;
-        else if(c == EntityAIAvoidEntity.class && !(entity instanceof EntityCreature))
-            return false;
-        else if(c == EntityAIAttackOnCollide.class && !(entity instanceof EntityCreature))
-            return false;
-        else if(c == EntityAIWander.class && !(entity instanceof EntityCreature))
-            return false;
-        else if(c == EntityAINearestAttackableTarget.class && !(entity instanceof EntityCreature))
-            return false;
-        else if(c == EntityAIHurtByTarget.class && !(entity instanceof EntityCreature))
-            return false;
-        else if(c == EntityAIArrowAttack.class && !(entity instanceof IRangedAttackMob))
-            return false;
-        else if(c == EntityAIBeg.class && !(entity instanceof EntityWolf))
-            return false;
-        else if(c == EntityAIDefendVillage.class && !(entity instanceof EntityIronGolem))
-            return false;
-        else if(c == EntityAIFleeSun.class && !(entity instanceof EntityCreature))
-            return false;
-        else if(c == EntityAIFollowGolem.class && !(entity instanceof EntityVillager))
-            return false;
-        else if(c == EntityAIFollowOwner.class && !(entity instanceof EntityTameable))
-            return false;
-        else if(c == EntityAIFollowParent.class && !(entity instanceof EntityAnimal))
-            return false;
-        else if(c == EntityAILookAtTradePlayer.class && !(entity instanceof EntityVillager))
-            return false;
-        else if(c == EntityAILookAtVillager.class && !(entity instanceof EntityIronGolem))
-            return false;
-        else if(c == EntityAIMate.class && !(entity instanceof EntityAnimal))
-            return false;
-        else if(c == EntityAIPanic.class && !(entity instanceof EntityCreature))
-            return false;
-        else if(c == EntityAITempt.class && !(entity instanceof EntityCreature))
-            return false;
-        else if(c == EntityAIMoveIndoors.class && !(entity instanceof EntityCreature))
-            return false;
-        else if(c == EntityAIMoveThroughVillage.class && !(entity instanceof EntityCreature))
-            return false;
-        else if(c == EntityAIOcelotSit.class && !(entity instanceof EntityOcelot))
-            return false;
-        else if(c == EntityAIPlay.class && !(entity instanceof EntityVillager))
-            return false;
-        else if(c == EntityAIRestrictOpenDoor.class && !(entity instanceof EntityCreature))
-            return false;
-        else if(c == EntityAIRestrictSun.class && !(entity instanceof EntityCreature))
-            return false;
-        else if(c == EntityAIRunAroundLikeCrazy.class && !(entity instanceof EntityHorse))
-            return false;
-        else if(c == EntityAISit.class && !(entity instanceof EntityTameable))
-            return false;
-        else if(c == EntityAITargetNonTamed.class && !(entity instanceof EntityTameable))
-            return false;
-        else if(c == EntityAITradePlayer.class && !(entity instanceof EntityVillager))
-            return false;
-        else if(c == EntityAIVillagerMate.class && !(entity instanceof EntityVillager))
-            return false;
-        else if(c == EntityAIOwnerHurtTarget.class && !(entity instanceof EntityTameable))
-            return false;
-        else if(c == EntityAIOwnerHurtByTarget.class && !(entity instanceof EntityTameable))
-            return false;
-        else if(c == EntityAIFleeSunEvenNotBurning.class && ! (entity instanceof EntityCreature))
-            return false;
-        return true;
+        return worker.isSuitableForEntity(entity, c);
     }
 
     public static String getNameFromClass(Class<? extends EntityAIBase> c)

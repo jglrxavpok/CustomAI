@@ -80,7 +80,7 @@ public final class EntityAIFactory
         return null;
     }
    
-    private EntityAIWorker getWorkerFromClass(Class<? extends EntityAIBase> c)
+    public EntityAIWorker getWorkerFromClass(Class<? extends EntityAIBase> c)
     {
         Set<Class<? extends EntityAIBase>[]> keys = workerRegistry.keySet();
         Iterator<Class<? extends EntityAIBase>[]> it = keys.iterator();

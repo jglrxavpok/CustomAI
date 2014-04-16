@@ -619,4 +619,72 @@ public class EntityAIVanillaWorker extends EntityAIWorker
         return object;
     }
 
+    @Override
+    public boolean isSuitableForEntity(EntityLiving entity, Class<? extends EntityAIBase> c)
+    {
+        if(c == EntityAICreeperSwell.class && !(entity instanceof EntityCreeper))
+            return false;
+        else if(c == EntityAIAvoidEntity.class && !(entity instanceof EntityCreature))
+            return false;
+        else if(c == EntityAIAttackOnCollide.class && !(entity instanceof EntityCreature))
+            return false;
+        else if(c == EntityAIWander.class && !(entity instanceof EntityCreature))
+            return false;
+        else if(c == EntityAINearestAttackableTarget.class && !(entity instanceof EntityCreature))
+            return false;
+        else if(c == EntityAIHurtByTarget.class && !(entity instanceof EntityCreature))
+            return false;
+        else if(c == EntityAIArrowAttack.class && !(entity instanceof IRangedAttackMob))
+            return false;
+        else if(c == EntityAIBeg.class && !(entity instanceof EntityWolf))
+            return false;
+        else if(c == EntityAIDefendVillage.class && !(entity instanceof EntityIronGolem))
+            return false;
+        else if(c == EntityAIFleeSun.class && !(entity instanceof EntityCreature))
+            return false;
+        else if(c == EntityAIFollowGolem.class && !(entity instanceof EntityVillager))
+            return false;
+        else if(c == EntityAIFollowOwner.class && !(entity instanceof EntityTameable))
+            return false;
+        else if(c == EntityAIFollowParent.class && !(entity instanceof EntityAnimal))
+            return false;
+        else if(c == EntityAILookAtTradePlayer.class && !(entity instanceof EntityVillager))
+            return false;
+        else if(c == EntityAILookAtVillager.class && !(entity instanceof EntityIronGolem))
+            return false;
+        else if(c == EntityAIMate.class && !(entity instanceof EntityAnimal))
+            return false;
+        else if(c == EntityAIPanic.class && !(entity instanceof EntityCreature))
+            return false;
+        else if(c == EntityAITempt.class && !(entity instanceof EntityCreature))
+            return false;
+        else if(c == EntityAIMoveIndoors.class && !(entity instanceof EntityCreature))
+            return false;
+        else if(c == EntityAIMoveThroughVillage.class && !(entity instanceof EntityCreature))
+            return false;
+        else if(c == EntityAIOcelotSit.class && !(entity instanceof EntityOcelot))
+            return false;
+        else if(c == EntityAIPlay.class && !(entity instanceof EntityVillager))
+            return false;
+        else if(c == EntityAIRestrictOpenDoor.class && !(entity instanceof EntityCreature))
+            return false;
+        else if(c == EntityAIRestrictSun.class && !(entity instanceof EntityCreature))
+            return false;
+        else if(c == EntityAIRunAroundLikeCrazy.class && !(entity instanceof EntityHorse))
+            return false;
+        else if(c == EntityAISit.class && !(entity instanceof EntityTameable))
+            return false;
+        else if(c == EntityAITargetNonTamed.class && !(entity instanceof EntityTameable))
+            return false;
+        else if(c == EntityAITradePlayer.class && !(entity instanceof EntityVillager))
+            return false;
+        else if(c == EntityAIVillagerMate.class && !(entity instanceof EntityVillager))
+            return false;
+        else if(c == EntityAIOwnerHurtTarget.class && !(entity instanceof EntityTameable))
+            return false;
+        else if(c == EntityAIOwnerHurtByTarget.class && !(entity instanceof EntityTameable))
+            return false;
+        return true;
+    }
+
 }

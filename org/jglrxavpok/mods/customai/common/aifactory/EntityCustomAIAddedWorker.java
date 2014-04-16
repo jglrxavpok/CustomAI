@@ -147,4 +147,13 @@ public class EntityCustomAIAddedWorker extends EntityAIWorker
         return object;
     }
 
+    @Override
+    public boolean isSuitableForEntity(EntityLiving living,
+            Class<? extends EntityAIBase> clazz)
+    {
+        if(clazz == EntityAIFleeSunEvenNotBurning.class && ! (living instanceof EntityCreature))
+            return false;
+        return true;
+    }
+
 }

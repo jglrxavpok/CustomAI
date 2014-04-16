@@ -9,7 +9,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.monster.EntityCreeper;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
@@ -72,8 +71,7 @@ public class PacketGetAI extends AbstractPacket
 
     @Override
     public void handleClientSide(EntityPlayer player)
-    {
-    }
+    {}
 
     @Override
     public void handleServerSide(EntityPlayer player)

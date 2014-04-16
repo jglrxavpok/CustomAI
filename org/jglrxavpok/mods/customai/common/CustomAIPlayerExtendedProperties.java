@@ -1,7 +1,6 @@
 package org.jglrxavpok.mods.customai.common;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IExtendedEntityProperties;
@@ -11,8 +10,6 @@ public class CustomAIPlayerExtendedProperties implements IExtendedEntityProperti
 
     public static final String INTERACTING_WITH_CLASS_NAME = "interactingFullClassName";
     public static final String INTERACTING_WITH_ENTITY_ID = "interactingEntityID";
-    private Entity entity;
-    private World world;
     private int entityInteractingWithID = Integer.MIN_VALUE;
     private Class<? extends Entity> entityInteractingWithClass;
 
@@ -49,8 +46,6 @@ public class CustomAIPlayerExtendedProperties implements IExtendedEntityProperti
     @Override
     public void init(Entity entity, World world)
     {
-        this.entity = entity;
-        this.world = world;
     }
 
     public void setEntityInteractingWith(int entityId, Class<? extends Entity> class1)

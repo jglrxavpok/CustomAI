@@ -37,7 +37,6 @@ public class PacketPipeline extends MessageToMessageCodec<FMLProxyPacket, Abstra
     private LinkedList<Class<? extends AbstractPacket>> packets           = new LinkedList<Class<? extends AbstractPacket>>();
     private boolean                                     isPostInitialised = false;
 
-    @SuppressWarnings("unchecked")
     public PacketPipeline(String packetsPackage, Class<?> clazz)
     {
 //        try

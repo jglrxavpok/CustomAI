@@ -4,14 +4,13 @@ import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.network.internal.FMLNetworkHandler;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EntityDamageSource;
 import net.minecraftforge.common.IExtendedEntityProperties;
 import net.minecraftforge.event.entity.EntityEvent.EntityConstructing;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
-import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.player.EntityInteractEvent;
 
 import org.jglrxavpok.mods.customai.ModCustomAI;
+import org.jglrxavpok.mods.customai.items.AICopierItem;
 import org.jglrxavpok.mods.customai.netty.PacketGetAI;
 
 public class EntityEvents
@@ -42,16 +41,23 @@ public class EntityEvents
     public void onEntityInteraction(EntityInteractEvent e)
     {
         ItemStack stack = e.entityPlayer.getCurrentEquippedItem();
-        if(stack != null && stack.getItem() == ModCustomAI.rewriterItem)
+        if(stack != null)
         {
-            e.setCanceled(true);
-            CustomAIPlayerExtendedProperties props = (CustomAIPlayerExtendedProperties)e.entityPlayer.getExtendedProperties(ModCustomAI.MODID);
-            if(props == null)
+            if(stack.getItem() == ModCustomAI.rewriterItem)
             {
-                e.entityPlayer.registerExtendedProperties(ModCustomAI.MODID, new CustomAIPlayerExtendedProperties());
+                e.setCanceled(true);
+                CustomAIPlayerExtendedProperties props = (CustomAIPlayerExtendedProperties)e.entityPlayer.getExtendedProperties(ModCustomAI.MODID);
+                if(props == null)
+                {
+                    e.entityPlayer.registerExtendedProperties(ModCustomAI.MODID, new CustomAIPlayerExtendedProperties());
+                }
+                props.setEntityInteractingWith(e.target.getEntityId(), e.target.getClass());
+                FMLNetworkHandler.openGui(e.entityPlayer, ModCustomAI.instance, 0, e.entityPlayer.worldObj, (int)Math.floor(e.entityPlayer.posX), (int)Math.floor(e.entityPlayer.posY), (int)Math.floor(e.entityPlayer.posZ));
             }
-            props.setEntityInteractingWith(e.target.getEntityId(), e.target.getClass());
-            FMLNetworkHandler.openGui(e.entityPlayer, ModCustomAI.instance, 0, e.entityPlayer.worldObj, (int)Math.floor(e.entityPlayer.posX), (int)Math.floor(e.entityPlayer.posY), (int)Math.floor(e.entityPlayer.posZ));
+            else if(stack.getItem() == ModCustomAI.copierItem)
+            {
+                e.setCanceled(!((AICopierItem)stack.getItem()).onInteract(e.entityPlayer.worldObj, stack, e.entityPlayer, e.target));
+            }
         }
     }
     

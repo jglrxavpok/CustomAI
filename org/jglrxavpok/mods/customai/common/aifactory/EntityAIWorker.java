@@ -21,6 +21,8 @@ public abstract class EntityAIWorker
     
     public abstract JSONObject createDefaultJSON(Class<? extends EntityAIBase> clazz);
     
+    public abstract boolean isSuitableForEntity(EntityLiving living, Class<? extends EntityAIBase> clazz);
+    
     protected static EntitySheep testSheep;
     protected static EntitySpider testSpider;
     
